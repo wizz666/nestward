@@ -13,6 +13,20 @@ your own domain with one click, and give the home a health score.
 > and the health score – plus login and encrypted agents. Early release:
 > it runs every day on a real home setup, but expect rough edges.
 
+## Screenshots
+
+**Health of the home** – one number and a short list of what to fix.
+
+![Health score](docs/screenshots/health.png)
+
+**Services** – everything already running, recognised and linked.
+
+![Services found on an Unraid server](docs/screenshots/services.png)
+
+**Seen from the internet** – every public address, checked from the outside.
+
+![Exposure check](docs/screenshots/exposure.png)
+
 ## Install
 
 One container on the machine you want to watch (amd64 or arm64):

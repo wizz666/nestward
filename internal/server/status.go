@@ -171,7 +171,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		in.Machines = append(in.Machines, health.Machine{ID: m.ID, Name: m.Name, Hardware: hw})
+		in.Machines = append(in.Machines, health.Machine{ID: m.ID, Name: m.Name, Hardware: hw, Discovery: m.Discovery})
 	}
 	if s.Monitor != nil {
 		in.Checks, _ = s.Monitor.Checks(ctx)

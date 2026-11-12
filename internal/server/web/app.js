@@ -140,6 +140,11 @@
       body.appendChild(el("div", "svc-res", res));
     }
 
+    if (s.state === "running" && s.autostart === "no") {
+      var na = el("div", "svc-warn", t("ui.no_autostart"));
+      na.title = t("ui.no_autostart_hint");
+      body.appendChild(na);
+    }
     if (s.login === "none") {
       var warn = el("div", "svc-warn", t("ui.no_login"));
       warn.title = t("ui.no_login_hint");

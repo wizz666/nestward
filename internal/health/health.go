@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/wizz666/nestward/internal/alert"
+	"github.com/wizz666/nestward/internal/discovery"
 	"github.com/wizz666/nestward/internal/exposure"
 	"github.com/wizz666/nestward/internal/hardware"
 	"github.com/wizz666/nestward/internal/i18n"
@@ -47,6 +49,9 @@ type Machine struct {
 	ID       string
 	Name     string
 	Hardware hardware.Report
+	// Discovery is the machine's last service report, for the check of
+	// what starts by itself after a power cut. Nil when unknown.
+	Discovery *discovery.Result
 }
 
 // Input is everything the score is based on.
@@ -78,6 +83,9 @@ const (
 	maxExposedOpen      = 40
 	ptsExposedAdmin     = 3 // an admin login page anyone can reach
 	maxExposedAdmin     = 12
+	ptsNoAutostart      = 3 // a running service that will not come back after a power cut
+	maxNoAutostart      = 15
+	ptsArrayManual      = 10 // Unraid's array waits for someone to press Start
 )
 
 // Compute works out the score.
@@ -180,6 +188,32 @@ func Compute(in Input, t i18n.T) Report {
 	}
 	if diskOK && len(in.Machines) > 0 {
 		good = append(good, t.Get("health.good.disks"))
+	}
+
+	// What comes back by itself after a power cut.
+	bootSeen, bootOK, noStart := false, true, 0
+	for _, m := range in.Machines {
+		d := m.Discovery
+		if d == nil || !d.Available {
+			continue
+		}
+		bootSeen = true
+		if d.Boot != nil && d.Boot.Unraid != nil && !d.Boot.Unraid.ArrayAutostart {
+			bootOK = false
+			add("boot_array", ptsArrayManual, &Action{Kind: "show_machine", Target: m.ID}, "machine", m.Name)
+		}
+		names := d.NotStarting()
+		if len(names) == 0 {
+			continue
+		}
+		bootOK = false
+		pts := min(ptsNoAutostart*len(names), maxNoAutostart-noStart)
+		noStart += pts
+		add("boot_manual", pts, &Action{Kind: "show_machine", Target: m.ID},
+			"machine", m.Name, "count", strconv.Itoa(len(names)), "names", strings.Join(names, ", "))
+	}
+	if bootSeen && bootOK {
+		good = append(good, t.Get("health.good.boot"))
 	}
 
 	// Published addresses that do not answer.

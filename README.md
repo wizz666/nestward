@@ -101,6 +101,12 @@ the container again with the same command. Your data stays in the
   devices at `https://name.your-tailnet.ts.net` (or `http://name` without
   HTTPS certificates). No domain needed, nothing opened to the internet; the
   better path for films and music. Undo removes the device from the tailnet.
+- Power-cut check: lists what runs now but will not start by itself when
+  the machine starts again – Docker containers without a restart policy
+  (Unraid's own autostart list counts), Proxmox guests without "Start at
+  boot", libvirt virtual machines without autostart, and an Unraid array
+  that waits for someone to press Start. It cannot see the BIOS setting
+  that switches the machine itself back on.
 - Health score: one number from 0 to 100 for the home, with a plain list of
   what to do. Nestward only deducts for what it can see (alerts, outside
   watch, silent machines, services not working, full disks, low memory,
@@ -361,6 +367,7 @@ Den hittar också alla tjänster som redan körs i Docker, känner igen vilken a
 det är och visar dem som en karta med länkar. Varje minut kontrolleras att
 tjänsterna fungerar, och larm skickas till mobilen via ntfy om något slutar
 fungera. En vakt utanför huset larmar om hela hemmet blir tyst.
+Den kontrollerar också att allt som körs startar av sig självt efter ett strömavbrott.
 Webbsidan kräver inloggning med lösenord och tvåstegskod, och tjänster kan
 publiceras på den egna domänen med ett klick, med inloggning framför och en
 ångra-knapp.

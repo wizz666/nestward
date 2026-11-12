@@ -77,6 +77,12 @@ func AddGuests(r *Result, gs []Guest, cat *Catalog, err error) {
 			Ports:   []Port{},
 			Guest:   &g,
 		}
+		if s.State == "running" {
+			s.Autostart = AutostartNo
+			if g.OnBoot {
+				s.Autostart = AutostartYes
+			}
+		}
 		if sig, ok := cat.MatchName(g.Name); ok {
 			s.Kind = KindApp
 			if sig.Role == RoleSupport {

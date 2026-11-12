@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -88,6 +89,35 @@ func (c *DockerClient) Containers(ctx context.Context) ([]Container, error) {
 	var out []Container
 	err := c.get(ctx, "/containers/json?all=1", &out)
 	return out, err
+}
+
+// policyCache remembers each container's restart policy. A policy can
+// only change by recreating the container, which gives it a new id.
+var policyCache sync.Map // container id -> policy name
+
+// RestartPolicy says how Docker restarts a container: "no", "always",
+// "unless-stopped" or "on-failure". It is not in the list answer, so each
+// container is asked once (a GET, like everything else here).
+func (c *DockerClient) RestartPolicy(ctx context.Context, id string) (string, error) {
+	if v, ok := policyCache.Load(id); ok {
+		return v.(string), nil
+	}
+	var info struct {
+		HostConfig struct {
+			RestartPolicy struct {
+				Name string `json:"Name"`
+			} `json:"RestartPolicy"`
+		} `json:"HostConfig"`
+	}
+	if err := c.get(ctx, "/containers/"+url.PathEscape(id)+"/json", &info); err != nil {
+		return "", err
+	}
+	name := info.HostConfig.RestartPolicy.Name
+	if name == "" {
+		name = "no"
+	}
+	policyCache.Store(id, name)
+	return name, nil
 }
 
 func (c *DockerClient) get(ctx context.Context, path string, v any) error {

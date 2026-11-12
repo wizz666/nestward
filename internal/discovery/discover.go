@@ -60,6 +60,10 @@ type Service struct {
 	Ports    []Port   `json:"ports"`
 	Web      *WebLink `json:"web,omitempty"`
 	Guest    *Guest   `json:"guest,omitempty"` // set for Proxmox VMs and containers
+	// Autostart says whether a running service comes back by itself when
+	// the machine starts again after a power cut: "yes", "no", or empty
+	// when Nestward cannot tell.
+	Autostart string `json:"autostart,omitempty"`
 }
 
 // Stats counts what was recognised.
@@ -85,6 +89,8 @@ type Result struct {
 	At        time.Time `json:"at"`
 	Services  []Service `json:"services"`
 	Stats     Stats     `json:"stats"`
+	// Boot is what starts by itself on this machine, when known.
+	Boot *Boot `json:"boot,omitempty"`
 }
 
 // Lister returns the containers to look at.
@@ -113,7 +119,26 @@ func Discover(ctx context.Context, cat *Catalog, newLister func() (Lister, error
 	r.Available = true
 	r.Services = Recognize(cs, cat)
 	r.Stats = count(r.Services)
+	if pl, ok := l.(policyLister); ok {
+		for i := range r.Services {
+			s := &r.Services[i]
+			if s.State != "running" {
+				continue
+			}
+			if p, err := pl.RestartPolicy(ctx, s.ID); err == nil {
+				s.Autostart = AutostartNo
+				if p == "always" || p == "unless-stopped" {
+					s.Autostart = AutostartYes
+				}
+			}
+		}
+	}
 	return r
+}
+
+// policyLister can also say how Docker restarts a container.
+type policyLister interface {
+	RestartPolicy(ctx context.Context, id string) (string, error)
 }
 
 // DockerLister adapts NewDockerClient for Discover.

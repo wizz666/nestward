@@ -24,6 +24,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	_ "time/tzdata" // alert times in local time even in minimal containers
@@ -148,6 +149,7 @@ func discoverer() (func(context.Context) discovery.Result, error) {
 			gs, err := pve.Guests(ctx)
 			discovery.AddGuests(&r, gs, cat, err)
 		}
+		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 		return r
 	}, nil
 }
@@ -175,6 +177,9 @@ func discover(ctx context.Context, args []string, w io.Writer) error {
 		}
 		discovery.AddGuests(&r, gs, cat, err)
 	}
+	if *from == "" {
+		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
+	}
 	if *asJSON {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
@@ -201,6 +206,14 @@ func discover(ctx context.Context, args []string, w io.Writer) error {
 	st := r.Stats
 	fmt.Fprintf(w, "\n%d containers, %d running. Recognised %d of %d public images (%d%%), %d built locally.\n",
 		st.Total, st.Running, st.Recognized, st.Total-st.Own, st.Percent, st.Own)
+	if b := r.Boot; b != nil && b.Unraid != nil && !b.Unraid.ArrayAutostart {
+		fmt.Fprintln(w, "After a power cut: the Unraid array does not start by itself.")
+	}
+	if names := r.NotStarting(); len(names) > 0 {
+		fmt.Fprintf(w, "After a power cut these do not start by themselves: %s\n", strings.Join(names, ", "))
+	} else {
+		fmt.Fprintln(w, "After a power cut everything that runs now starts by itself.")
+	}
 	return nil
 }
 

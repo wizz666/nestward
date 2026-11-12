@@ -1,0 +1,23 @@
+# Vaultwarden – password manager compatible with Bitwarden apps.
+id: vaultwarden
+name: Vaultwarden
+category: security
+homepage: https://github.com/dani-garcia/vaultwarden
+requires:
+  arch: [amd64, arm64, arm]
+  ram_min_gb: 0.25
+  ram_recommended_gb: 0.5
+  ram_use_gb: 0.1
+  cores_min: 1
+  cores_recommended: 1
+  gpu: none
+  disk_free_gb: 1
+  ssd: none
+  virtualization: none
+text:
+  en:
+    note: Very light. Works almost everywhere. Keep a backup outside the house.
+    suggestion: Free up some memory or disk space, then try again.
+  sv:
+    note: Mycket lätt. Fungerar nästan överallt. Ha en säkerhetskopia utanför huset.
+    suggestion: Frigör lite minne eller diskutrymme och försök igen.

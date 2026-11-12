@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nestward</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 3 14h4v14h18V14h4z' fill='%232f6f5e'/%3E%3Ccircle cx='16' cy='19' r='4' fill='%23f4efe6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 3 14h4v14h18V14h4z"/><circle cx="16" cy="19" r="4"/></svg>
+      <div>
+        <h1 data-i18n="ui.title">Nestward</h1>
+        <p class="tagline" data-i18n="ui.tagline"></p>
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" id="refresh" data-i18n="ui.refresh"></button>
+      <button type="button" id="lang" class="ghost" data-i18n="ui.language"></button>
+      <button type="button" id="logout" class="ghost" data-i18n="auth.logout" hidden></button>
+    </div>
+  </header>
+
+  <section id="auth" class="panel auth" hidden></section>
+
+  <section id="health" class="panel health" hidden></section>
+
+  <div id="overview" class="overview" role="status" hidden></div>
+
+  <main id="main">
+    <p class="status" id="status" data-i18n="ui.loading">…</p>
+  </main>
+
+  <section id="agents" class="panel" hidden>
+    <h2 data-i18n="ag.heading"></h2>
+    <p class="small muted" data-i18n="ag.intro"></p>
+    <p><button type="button" id="add-machine" data-i18n="ag.add"></button></p>
+    <ul class="agent-list"></ul>
+  </section>
+
+  <section id="publications" class="panel" hidden>
+    <h2 data-i18n="pub.heading"></h2>
+    <div class="pub-list"></div>
+  </section>
+
+  <section id="exposure" class="panel" hidden>
+    <h2 data-i18n="exp.heading"></h2>
+    <p class="small muted" data-i18n="exp.intro"></p>
+    <div class="xp-body"></div>
+  </section>
+
+  <dialog id="pub-dialog" class="dialog">
+    <div class="dialog-body"></div>
+  </dialog>
+
+  <section id="alerts" class="panel" hidden>
+    <h2 data-i18n="ui.alerts_heading"></h2>
+    <p id="alerts-target"></p>
+    <p id="alerts-error" class="error-text" hidden></p>
+    <p class="row">
+      <button type="button" id="test-alert" data-i18n="ui.alerts_test"></button>
+      <button type="button" id="alerts-setup" class="ghost" data-i18n="health.btn.alerts_setup"></button>
+      <span id="test-result" class="muted"></span>
+    </p>
+    <p class="row"><span id="heartbeat"></span>
+      <button type="button" id="heartbeat-setup" class="ghost small" data-i18n="health.btn.heartbeat_setup"></button></p>
+    <h3 data-i18n="ui.events_heading"></h3>
+    <ul id="events" class="events"></ul>
+  </section>
+
+  <footer>
+    <p data-i18n="ui.footer"></p>
+    <p><a id="json" href="api/v1/machines" data-i18n="ui.show_json"></a> · <span id="version"></span></p>
+  </footer>
+
+  <template id="machine-tpl">
+    <section class="machine">
+      <div class="machine-head">
+        <h2 class="m-title"></h2>
+        <span class="m-source"></span>
+      </div>
+      <p class="summary"></p>
+      <h3 data-i18n="ui.services_heading"></h3>
+      <div class="services"></div>
+      <h3 data-i18n="ui.hardware_heading"></h3>
+      <dl class="facts"></dl>
+      <h3 data-i18n="ui.apps_heading"></h3>
+      <ul class="apps"></ul>
+    </section>
+  </template>
+
+  <script src="app.js"></script>
+  <script src="publish.js"></script>
+  <script src="exposure.js"></script>
+</body>
+</html>

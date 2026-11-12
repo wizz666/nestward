@@ -1,0 +1,15 @@
+# Image from binaries built by `make cross` – no compiler needed on the
+# machine that builds the image, so it is light enough for a small server.
+#   make cross
+#   docker build -f Dockerfile.release -t nestward .
+FROM gcr.io/distroless/static-debian12
+ARG TARGETARCH=amd64
+# --chmod: binaries cross-built on Windows have no exec bit.
+COPY --chmod=0755 dist/nestward-linux-${TARGETARCH} /nestward
+ENV NESTWARD_ADDR=0.0.0.0:8470 \
+    NESTWARD_DATA=/data \
+    NESTWARD_HOST_ROOT=/host
+VOLUME ["/data"]
+EXPOSE 8470 8472
+ENTRYPOINT ["/nestward"]
+CMD ["serve"]

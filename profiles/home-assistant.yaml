@@ -1,0 +1,23 @@
+# Home Assistant – smart home hub. Values are starting estimates, to be measured.
+id: home-assistant
+name: Home Assistant
+category: smart-home
+homepage: https://www.home-assistant.io
+requires:
+  arch: [amd64, arm64]
+  ram_min_gb: 1
+  ram_recommended_gb: 2
+  ram_use_gb: 0.5
+  cores_min: 1
+  cores_recommended: 2
+  gpu: none
+  disk_free_gb: 5
+  ssd: recommended
+  virtualization: preferred
+text:
+  en:
+    note: Home Assistant OS runs as a virtual machine. Without virtualization, Home Assistant Container works but has no add-on store.
+    suggestion: Run Home Assistant on a small always-on machine with at least 2 GB of RAM and an SSD.
+  sv:
+    note: Home Assistant OS körs som en virtuell maskin. Utan virtualisering fungerar Home Assistant Container, men utan tilläggsbutiken.
+    suggestion: Kör Home Assistant på en liten dator som alltid är på, med minst 2 GB RAM och en SSD.

@@ -1,0 +1,1088 @@
+[
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000001",
+  "Names": [
+   "/binhex-emby"
+  ],
+  "Image": "binhex/arch-emby",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8096,
+    "PublicPort": 8096,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8096,
+    "PublicPort": 8096,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:8096]"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.2"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000002",
+  "Names": [
+   "/nextcloud-aio-apache"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-apache:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 11000,
+    "PublicPort": 11000,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 11000,
+    "PublicPort": 11000,
+    "Type": "tcp"
+   },
+   {
+    "IP": "",
+    "PrivatePort": 80,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Apache and Caddy for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.11"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000003",
+  "Names": [
+   "/nextcloud-aio-nextcloud"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-nextcloud:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 9000,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Nextcloud for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.10"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000004",
+  "Names": [
+   "/nextcloud-aio-imaginary"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-imaginary:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Imaginary for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.9"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000005",
+  "Names": [
+   "/nextcloud-aio-redis"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-redis:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 6379,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Redis for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.8"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000006",
+  "Names": [
+   "/nextcloud-aio-database"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-postgresql:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 5432,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "PostgreSQL for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.7"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000007",
+  "Names": [
+   "/nextcloud-aio-whiteboard"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-whiteboard:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 3002,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Whiteboard for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.6"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000008",
+  "Names": [
+   "/nextcloud-aio-notify-push"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-notify-push:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Notify Push for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.5"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000009",
+  "Names": [
+   "/nextcloud-aio-talk"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-talk:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 3478,
+    "PublicPort": 3478,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 3478,
+    "PublicPort": 3478,
+    "Type": "tcp"
+   },
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 3478,
+    "PublicPort": 3478,
+    "Type": "udp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 3478,
+    "PublicPort": 3478,
+    "Type": "udp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Talk for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.4"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000000a",
+  "Names": [
+   "/nextcloud-aio-collabora"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-collabora:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 9980,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Collabora for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.3"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000000b",
+  "Names": [
+   "/nextcloud-aio-borgbackup"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-borgbackup:latest",
+  "State": "exited",
+  "Status": "Exited (0)",
+  "Ports": [],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "org.opencontainers.image.title": "Borgbackup for Nextcloud AIO"
+  },
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": ""
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000000c",
+  "Names": [
+   "/MagicMirrorTV"
+  ],
+  "Image": "mm-legacy:1.0.0",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "192.168.1.92",
+    "PrivatePort": 8080,
+    "PublicPort": 8095,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.webui": "http://192.168.1.92:8095"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.13"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000000d",
+  "Names": [
+   "/MagicMirror2"
+  ],
+  "Image": "karsten13/magicmirror:alpine-v2.38.0",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "192.168.1.92",
+    "PrivatePort": 8080,
+    "PublicPort": 8098,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.webui": "http://192.168.1.92:8098",
+   "org.opencontainers.image.title": "Container image for MagicMirror\u00b2"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.12"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000000e",
+  "Names": [
+   "/home-dashboard"
+  ],
+  "Image": "home-dashboard:0.4.0",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "192.168.1.92",
+    "PrivatePort": 8787,
+    "PublicPort": 8787,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.webui": "http://192.168.1.92:8787/admin"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.11"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000000f",
+  "Names": [
+   "/family-media"
+  ],
+  "Image": "family-media:2.0.0",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "127.0.0.1",
+    "PrivatePort": 8000,
+    "PublicPort": 8097,
+    "Type": "tcp"
+   },
+   {
+    "IP": "192.168.1.92",
+    "PrivatePort": 8000,
+    "PublicPort": 8097,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {},
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.10"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000010",
+  "Names": [
+   "/tv-guide"
+  ],
+  "Image": "nginx:alpine",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 80,
+    "PublicPort": 8091,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 80,
+    "PublicPort": 8091,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {},
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.4"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000011",
+  "Names": [
+   "/glances"
+  ],
+  "Image": "nicolargo/glances:latest-full",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [],
+  "Labels": {
+   "org.opencontainers.image.title": "glances"
+  },
+  "HostConfig": {
+   "NetworkMode": "host"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "host": {
+     "IPAddress": ""
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000012",
+  "Names": [
+   "/immich-server"
+  ],
+  "Image": "ghcr.io/immich-app/immich-server:release",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 2283,
+    "PublicPort": 2283,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 2283,
+    "PublicPort": 2283,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "org.opencontainers.image.title": "immich"
+  },
+  "HostConfig": {
+   "NetworkMode": "immich-net"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "immich-net": {
+     "IPAddress": "172.20.0.3"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000013",
+  "Names": [
+   "/immich-postgres"
+  ],
+  "Image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 5432,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "org.opencontainers.image.title": "base-images"
+  },
+  "HostConfig": {
+   "NetworkMode": "immich-net"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "immich-net": {
+     "IPAddress": "172.20.0.2"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000014",
+  "Names": [
+   "/immich-redis"
+  ],
+  "Image": "redis:6.2-alpine",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 6379,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {},
+  "HostConfig": {
+   "NetworkMode": "immich-net"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "immich-net": {
+     "IPAddress": "172.20.0.4"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000015",
+  "Names": [
+   "/librechat"
+  ],
+  "Image": "ghcr.io/danny-avila/librechat:latest",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 3080,
+    "PublicPort": 3080,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 3080,
+    "PublicPort": 3080,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {},
+  "HostConfig": {
+   "NetworkMode": "librechat-net"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "librechat-net": {
+     "IPAddress": "172.19.0.2"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000016",
+  "Names": [
+   "/librechat-mongo"
+  ],
+  "Image": "mongo:4.4",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 27017,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {},
+  "HostConfig": {
+   "NetworkMode": "librechat-net"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "librechat-net": {
+     "IPAddress": "172.19.0.3"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000017",
+  "Names": [
+   "/nextcloud-aio-mastercontainer"
+  ],
+  "Image": "nextcloud/all-in-one:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 9000,
+    "Type": "tcp"
+   },
+   {
+    "IP": "",
+    "PrivatePort": 80,
+    "Type": "tcp"
+   },
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8080,
+    "PublicPort": 7282,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8080,
+    "PublicPort": 7282,
+    "Type": "tcp"
+   },
+   {
+    "IP": "",
+    "PrivatePort": 8443,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "com.docker.compose.project": "nextcloud-aio",
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "https://[IP]:[PORT:8080]",
+   "org.opencontainers.image.title": "Nextcloud All-in-One Mastercontainer"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": "172.18.0.2"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000018",
+  "Names": [
+   "/vaultwarden"
+  ],
+  "Image": "vaultwarden/server",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 80,
+    "PublicPort": 4743,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 80,
+    "PublicPort": 4743,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:80]/admin"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.5"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000019",
+  "Names": [
+   "/Newt"
+  ],
+  "Image": "fosrl/newt",
+  "State": "exited",
+  "Status": "Exited (2)",
+  "Ports": [],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "org.opencontainers.image.title": "newt"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": ""
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000001a",
+  "Names": [
+   "/plex"
+  ],
+  "Image": "lscr.io/linuxserver/plex",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:32400]/web/index.html",
+   "org.opencontainers.image.title": "Plex"
+  },
+  "HostConfig": {
+   "NetworkMode": "host"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "host": {
+     "IPAddress": ""
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000001b",
+  "Names": [
+   "/NginxProxyManager"
+  ],
+  "Image": "jlesage/nginx-proxy-manager",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8181,
+    "PublicPort": 7818,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8181,
+    "PublicPort": 7818,
+    "Type": "tcp"
+   },
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 4443,
+    "PublicPort": 18443,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 4443,
+    "PublicPort": 18443,
+    "Type": "tcp"
+   },
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8080,
+    "PublicPort": 1880,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8080,
+    "PublicPort": 1880,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:8181]"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.6"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000001c",
+  "Names": [
+   "/WordPress"
+  ],
+  "Image": "wordpress",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "",
+    "PrivatePort": 80,
+    "Type": "tcp"
+   },
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8090,
+    "PublicPort": 8090,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8090,
+    "PublicPort": 8090,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:80]/"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.8"
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000001d",
+  "Names": [
+   "/nextcloud-aio-watchtower"
+  ],
+  "Image": "ghcr.io/nextcloud-releases/aio-watchtower:latest",
+  "State": "exited",
+  "Status": "Exited (0)",
+  "Ports": [],
+  "Labels": {},
+  "HostConfig": {
+   "NetworkMode": "nextcloud-aio"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "nextcloud-aio": {
+     "IPAddress": ""
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000001e",
+  "Names": [
+   "/portracker"
+  ],
+  "Image": "mostafawahied/portracker:latest",
+  "State": "running",
+  "Status": "Up (healthy)",
+  "Ports": [],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:4999]",
+   "org.opencontainers.image.title": "portracker"
+  },
+  "HostConfig": {
+   "NetworkMode": "host"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "host": {
+     "IPAddress": ""
+    }
+   }
+  }
+ },
+ {
+  "Id": "000000000000000000000000000000000000000000000000000000000000001f",
+  "Names": [
+   "/VS-Code-Server"
+  ],
+  "Image": "ahmadnassri/vscode-server",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8000,
+    "PublicPort": 8066,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8000,
+    "PublicPort": 8066,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:8000]",
+   "org.opencontainers.image.title": "vscode-server"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.9"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000020",
+  "Names": [
+   "/Unraid-Cloudflared-Tunnel"
+  ],
+  "Image": "figro/unraid-cloudflared-tunnel",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 46495,
+    "PublicPort": 46495,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 46495,
+    "PublicPort": 46495,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[IP]:[PORT:46495]"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.7"
+    }
+   }
+  }
+ },
+ {
+  "Id": "0000000000000000000000000000000000000000000000000000000000000021",
+  "Names": [
+   "/MagicMirror"
+  ],
+  "Image": "bastilimbach/docker-magicmirror",
+  "State": "running",
+  "Status": "Up",
+  "Ports": [
+   {
+    "IP": "0.0.0.0",
+    "PrivatePort": 8080,
+    "PublicPort": 8099,
+    "Type": "tcp"
+   },
+   {
+    "IP": "::",
+    "PrivatePort": 8080,
+    "PublicPort": 8099,
+    "Type": "tcp"
+   }
+  ],
+  "Labels": {
+   "net.unraid.docker.managed": "dockerman",
+   "net.unraid.docker.webui": "http://[iP]:[PORT:8099]/"
+  },
+  "HostConfig": {
+   "NetworkMode": "bridge"
+  },
+  "NetworkSettings": {
+   "Networks": {
+    "bridge": {
+     "IPAddress": "172.17.0.3"
+    }
+   }
+  }
+ }
+]

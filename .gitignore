@@ -1,0 +1,6 @@
+/data/
+/dist/
+*.db
+*.db-wal
+*.db-shm
+agent-token

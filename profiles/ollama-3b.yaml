@@ -1,0 +1,27 @@
+# Ollama with a small language model (about 3 billion parameters, 4-bit).
+id: ollama-3b
+name: Ollama (3B)
+category: ai
+homepage: https://ollama.com
+requires:
+  arch: [amd64, arm64]
+  ram_min_gb: 4
+  ram_recommended_gb: 8
+  ram_use_gb: 3.5
+  cores_min: 2
+  cores_recommended: 4
+  avx2: recommended
+  gpu: recommended
+  gpu_vram_gb: 4
+  gpu_vendors: [nvidia, amd]
+  gpu_replaces_ram: true
+  disk_free_gb: 5
+  ssd: recommended
+  virtualization: none
+text:
+  en:
+    note: A small model answers simple questions and controls the smart home. Without a graphics card it writes a few words per second.
+    suggestion: Run Ollama on a computer with an Nvidia or AMD graphics card, or accept slower answers.
+  sv:
+    note: En liten modell klarar enkla frågor och styrning av smarta hemmet. Utan grafikkort skriver den några ord per sekund.
+    suggestion: Kör Ollama på en dator med grafikkort från Nvidia eller AMD, eller räkna med långsammare svar.

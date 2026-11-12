@@ -1,0 +1,23 @@
+# Immich – photo and video backup with face recognition.
+id: immich
+name: Immich
+category: photos
+homepage: https://immich.app
+requires:
+  arch: [amd64, arm64]
+  ram_min_gb: 4
+  ram_recommended_gb: 6
+  ram_use_gb: 3
+  cores_min: 2
+  cores_recommended: 4
+  gpu: helps
+  disk_free_gb: 20
+  ssd: recommended
+  virtualization: none
+text:
+  en:
+    note: Face recognition and search are heavy the first time all photos are scanned. On a Raspberry Pi this can take days.
+    suggestion: Run Immich on a machine with at least 6 GB of RAM and 4 cores. Keep the photos on a large disk and the database on an SSD.
+  sv:
+    note: Ansiktsigenkänning och sökning är tunga första gången alla bilder läses in. På en Raspberry Pi kan det ta flera dagar.
+    suggestion: Kör Immich på en maskin med minst 6 GB RAM och 4 kärnor. Lägg bilderna på en stor disk och databasen på en SSD.

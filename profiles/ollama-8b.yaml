@@ -1,0 +1,27 @@
+# Ollama with a mid-size language model (7–8 billion parameters, 4-bit).
+id: ollama-8b
+name: Ollama (7–8B)
+category: ai
+homepage: https://ollama.com
+requires:
+  arch: [amd64, arm64]
+  ram_min_gb: 8
+  ram_recommended_gb: 16
+  ram_use_gb: 7
+  cores_min: 4
+  cores_recommended: 8
+  avx2: recommended
+  gpu: recommended
+  gpu_vram_gb: 8
+  gpu_vendors: [nvidia, amd]
+  gpu_replaces_ram: true
+  disk_free_gb: 10
+  ssd: recommended
+  virtualization: none
+text:
+  en:
+    note: Needs 16 GB of RAM or a graphics card with 8 GB of video memory to answer at a comfortable speed.
+    suggestion: Run this model on a computer with a graphics card that has at least 8 GB of video memory.
+  sv:
+    note: Kräver 16 GB RAM eller ett grafikkort med 8 GB videominne för att svara i lagom takt.
+    suggestion: Kör den här modellen på en dator med ett grafikkort som har minst 8 GB videominne.

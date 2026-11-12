@@ -1,0 +1,274 @@
+// Package health turns what Nestward knows into one number from 0 to 100
+// for the whole home, and a list of plain-language things to do. Every
+// deduction says why, and most have a button that fixes or shows it.
+// Nestward only deducts for things it can see; it never guesses.
+package health
+
+import (
+	"fmt"
+	"sort"
+	"strconv"
+
+	"github.com/wizz666/nestward/internal/alert"
+	"github.com/wizz666/nestward/internal/exposure"
+	"github.com/wizz666/nestward/internal/hardware"
+	"github.com/wizz666/nestward/internal/i18n"
+	"github.com/wizz666/nestward/internal/monitor"
+	"github.com/wizz666/nestward/internal/publish"
+)
+
+// Action is what the button next to an item does in the web page.
+type Action struct {
+	Kind   string `json:"kind"`             // alerts_setup, heartbeat_setup, show_service, show_machine, show_publications, show_exposure
+	Target string `json:"target,omitempty"` // check id, machine id …
+}
+
+// Item is one deduction.
+type Item struct {
+	Key    string            `json:"key"`
+	Points int               `json:"points"`
+	Params map[string]string `json:"params,omitempty"`
+	Text   string            `json:"text"`
+	Fix    string            `json:"fix"` // what to do, in plain words
+	Action *Action           `json:"action,omitempty"`
+}
+
+// Report is the score.
+type Report struct {
+	Score     int      `json:"score"`
+	Grade     string   `json:"grade"` // great, good, attention, act
+	GradeText string   `json:"grade_text"`
+	Items     []Item   `json:"items"`
+	Good      []string `json:"good"` // short list of what is fine, so the page is not only bad news
+}
+
+// Machine is one machine's hardware for the disk and memory checks.
+type Machine struct {
+	ID       string
+	Name     string
+	Hardware hardware.Report
+}
+
+// Input is everything the score is based on.
+type Input struct {
+	Machines     []Machine
+	Checks       []monitor.Check
+	Alerts       alert.Status
+	Heartbeat    alert.HeartbeatStatus
+	Publications []publish.Publication
+	// Exposure is what each public address shows a stranger.
+	Exposure []exposure.Finding
+}
+
+// Caps keep one kind of problem from eating the whole score.
+const (
+	ptsAlertsMissing    = 15
+	ptsAlertsFailing    = 10
+	ptsHeartbeatMissing = 10
+	ptsHeartbeatFailing = 10
+	ptsMachineSilent    = 10
+	ptsServiceDown      = 5
+	maxServiceDown      = 25
+	ptsDiskFull         = 15 // 95 % or more
+	ptsDiskNearlyFull   = 8  // 90 % or more
+	ptsMemoryLow        = 5
+	ptsPublishBroken    = 5
+	maxPublishBroken    = 15
+	ptsExposedOpen      = 20 // an open shell or AI server on the internet
+	maxExposedOpen      = 40
+	ptsExposedAdmin     = 3 // an admin login page anyone can reach
+	maxExposedAdmin     = 12
+)
+
+// Compute works out the score.
+func Compute(in Input, t i18n.T) Report {
+	var items []Item
+	var good []string
+	add := func(key string, pts int, action *Action, kv ...string) {
+		params := map[string]string{}
+		for i := 0; i+1 < len(kv); i += 2 {
+			params[kv[i]] = kv[i+1]
+		}
+		items = append(items, Item{Key: key, Points: pts, Params: params, Action: action,
+			Text: t.Get("health."+key, kv...), Fix: t.Get("health."+key+".fix", kv...)})
+	}
+
+	// Alerts reach the phone.
+	switch {
+	case !in.Alerts.Configured:
+		add("alerts_missing", ptsAlertsMissing, &Action{Kind: "alerts_setup"})
+	case in.Alerts.LastError != "":
+		add("alerts_failing", ptsAlertsFailing, &Action{Kind: "alerts_setup"}, "error", in.Alerts.LastError)
+	default:
+		good = append(good, t.Get("health.good.alerts"))
+	}
+
+	// Someone outside notices when the whole home goes quiet.
+	switch {
+	case !in.Heartbeat.Configured:
+		add("heartbeat_missing", ptsHeartbeatMissing, &Action{Kind: "heartbeat_setup"})
+	case in.Heartbeat.LastError != "":
+		add("heartbeat_failing", ptsHeartbeatFailing, &Action{Kind: "heartbeat_setup"})
+	default:
+		good = append(good, t.Get("health.good.heartbeat"))
+	}
+
+	// What is not working right now.
+	silent := map[string]bool{}
+	serviceDown := 0
+	var downChecks []monitor.Check
+	for _, c := range in.Checks {
+		if c.Status != monitor.Down {
+			continue
+		}
+		if c.Kind == monitor.KindMachine {
+			silent[c.MachineID] = true
+			add("machine_silent", ptsMachineSilent, &Action{Kind: "show_machine", Target: c.MachineID}, "machine", c.Machine)
+			continue
+		}
+		downChecks = append(downChecks, c)
+	}
+	// One line per service, even when both its container and page fail.
+	seen := map[string]bool{}
+	sort.Slice(downChecks, func(i, j int) bool { return downChecks[i].ID < downChecks[j].ID })
+	for _, c := range downChecks {
+		key := c.MachineID + "/" + c.Service
+		if seen[key] || silent[c.MachineID] {
+			continue
+		}
+		seen[key] = true
+		pts := ptsServiceDown
+		if serviceDown+pts > maxServiceDown {
+			pts = maxServiceDown - serviceDown
+		}
+		serviceDown += pts
+		name := c.App
+		if name == "" {
+			name = c.Service
+		}
+		add("service_down", pts, &Action{Kind: "show_service", Target: c.MachineID + "/" + c.Service},
+			"app", name, "machine", c.Machine)
+	}
+	if len(in.Checks) > 0 && len(seen) == 0 && len(silent) == 0 {
+		good = append(good, t.Get("health.good.services", "count", strconv.Itoa(countUp(in.Checks))))
+	}
+
+	// Disks and memory.
+	diskOK := true
+	for _, m := range in.Machines {
+		for _, f := range m.Hardware.Filesystems {
+			if f.TotalBytes == 0 {
+				continue
+			}
+			used := 100 - int(f.FreeBytes*100/f.TotalBytes)
+			switch {
+			case used >= 95:
+				diskOK = false
+				add("disk_full", ptsDiskFull, &Action{Kind: "show_machine", Target: m.ID},
+					"machine", m.Name, "mount", f.Mount, "percent", strconv.Itoa(used), "free", t.GB(f.FreeBytes))
+			case used >= 90:
+				diskOK = false
+				add("disk_nearly_full", ptsDiskNearlyFull, &Action{Kind: "show_machine", Target: m.ID},
+					"machine", m.Name, "mount", f.Mount, "percent", strconv.Itoa(used), "free", t.GB(f.FreeBytes))
+			}
+		}
+		mem := m.Hardware.Memory
+		if mem.TotalBytes > 0 && mem.AvailableBytes*10 < mem.TotalBytes {
+			add("memory_low", ptsMemoryLow, &Action{Kind: "show_machine", Target: m.ID},
+				"machine", m.Name, "free", t.GB(mem.AvailableBytes), "total", t.GB(mem.TotalBytes))
+		}
+	}
+	if diskOK && len(in.Machines) > 0 {
+		good = append(good, t.Get("health.good.disks"))
+	}
+
+	// Published addresses that do not answer.
+	broken := 0
+	for _, p := range in.Publications {
+		if p.Status != publish.Active || p.LastCheck == nil || p.LastCheck.Result != "unreachable" {
+			continue
+		}
+		pts := ptsPublishBroken
+		if broken+pts > maxPublishBroken {
+			pts = maxPublishBroken - broken
+		}
+		broken += pts
+		add("publish_broken", pts, &Action{Kind: "show_publications"}, "host", p.Hostname)
+	}
+
+	// What strangers can reach on the internet.
+	open, admin, safe := 0, 0, 0
+	for _, f := range in.Exposure {
+		if f.Accepted {
+			continue
+		}
+		switch f.Verdict {
+		case exposure.Open:
+			pts := min(ptsExposedOpen, maxExposedOpen-open)
+			open += pts
+			if pts > 0 {
+				add("exposed_open", pts, &Action{Kind: "show_exposure", Target: f.Host}, "host", f.Host, "app", appOr(f))
+			}
+		case exposure.AdminLogin:
+			pts := min(ptsExposedAdmin, maxExposedAdmin-admin)
+			admin += pts
+			if pts > 0 {
+				add("exposed_admin", pts, &Action{Kind: "show_exposure", Target: f.Host}, "host", f.Host, "app", appOr(f))
+			}
+		case exposure.Protected:
+			safe++
+		}
+	}
+	if len(in.Exposure) > 0 && open == 0 && admin == 0 {
+		good = append(good, t.Get("health.good.exposure", "count", strconv.Itoa(safe)))
+	}
+
+	total := 0
+	for _, it := range items {
+		total += it.Points
+	}
+	score := 100 - total
+	if score < 0 {
+		score = 0
+	}
+	// Biggest problems first.
+	sort.SliceStable(items, func(i, j int) bool { return items[i].Points > items[j].Points })
+	grade := "act"
+	switch {
+	case score >= 90:
+		grade = "great"
+	case score >= 75:
+		grade = "good"
+	case score >= 50:
+		grade = "attention"
+	}
+	if items == nil {
+		items = []Item{}
+	}
+	if good == nil {
+		good = []string{}
+	}
+	return Report{Score: score, Grade: grade, GradeText: t.Get("health.grade." + grade), Items: items, Good: good}
+}
+
+func countUp(cs []monitor.Check) int {
+	n := 0
+	for _, c := range cs {
+		if c.Status == monitor.Up && c.Kind != monitor.KindMachine {
+			n++
+		}
+	}
+	return n
+}
+
+// String is for logs.
+func (r Report) String() string {
+	return fmt.Sprintf("%d (%s, %d items)", r.Score, r.Grade, len(r.Items))
+}
+
+func appOr(f exposure.Finding) string {
+	if f.App != "" {
+		return f.App
+	}
+	return f.Host
+}

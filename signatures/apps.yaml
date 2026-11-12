@@ -1,0 +1,165 @@
+# Apps Nestward recognises in running containers (MIT, see LICENSE).
+#
+# Matching, in order:
+#   images:   full repository after removing registry, tag and "library/"
+#             (lscr.io/linuxserver/plex:latest -> linuxserver/plex)
+#   prefixes: repository starts with this
+#   aliases:  last part of the repository, after removing "arch-" and
+#             "docker-" in front (binhex/arch-emby -> emby). The id is
+#             always an alias.
+# port/path/scheme: where the web page usually is inside the container.
+# login: own = the app has its own login, none = open to anyone who can
+#        reach it (Nestward will warn before publishing those).
+# role: support = a helper of another app (database, cache, part of a stack).
+# profile: id of the hardware profile in profiles/, if there is one.
+
+apps:
+  # --- Media ---
+  - {id: plex, name: Plex, category: media, images: [plexinc/pms-docker, linuxserver/plex, hotio/plex], port: 32400, path: /web, login: own}
+  - {id: jellyfin, name: Jellyfin, category: media, images: [jellyfin/jellyfin, linuxserver/jellyfin, hotio/jellyfin], port: 8096, login: own, profile: jellyfin}
+  - {id: emby, name: Emby, category: media, images: [emby/embyserver, linuxserver/emby, binhex/arch-emby], aliases: [embyserver], port: 8096, login: own}
+  - {id: navidrome, name: Navidrome, category: media, images: [deluan/navidrome], port: 4533, login: own}
+  - {id: audiobookshelf, name: Audiobookshelf, category: media, images: [advplyr/audiobookshelf], port: 80, login: own}
+  - {id: tautulli, name: Tautulli, category: media, images: [tautulli/tautulli, linuxserver/tautulli], port: 8181, login: own}
+  - {id: overseerr, name: Overseerr, category: media, images: [sctx/overseerr, linuxserver/overseerr], port: 5055, login: own}
+  - {id: jellyseerr, name: Jellyseerr, category: media, images: [fallenbagel/jellyseerr], port: 5055, login: own}
+  - {id: kavita, name: Kavita, category: media, images: [jvmilazz0/kavita, kizaing/kavita, linuxserver/kavita], port: 5000, login: own}
+  - {id: komga, name: Komga, category: media, images: [gotson/komga], port: 25600, login: own}
+  - {id: calibre-web, name: Calibre-Web, category: media, images: [linuxserver/calibre-web], port: 8083, login: own}
+
+  # --- Downloads ---
+  - {id: sonarr, name: Sonarr, category: downloads, images: [linuxserver/sonarr, hotio/sonarr], port: 8989, login: own}
+  - {id: radarr, name: Radarr, category: downloads, images: [linuxserver/radarr, hotio/radarr], port: 7878, login: own}
+  - {id: lidarr, name: Lidarr, category: downloads, images: [linuxserver/lidarr, hotio/lidarr], port: 8686, login: own}
+  - {id: readarr, name: Readarr, category: downloads, images: [linuxserver/readarr, hotio/readarr], port: 8787, login: own}
+  - {id: prowlarr, name: Prowlarr, category: downloads, images: [linuxserver/prowlarr, hotio/prowlarr], port: 9696, login: own}
+  - {id: bazarr, name: Bazarr, category: downloads, images: [linuxserver/bazarr, hotio/bazarr], port: 6767, login: own}
+  - {id: jackett, name: Jackett, category: downloads, images: [linuxserver/jackett], port: 9117, login: none}
+  - {id: qbittorrent, name: qBittorrent, category: downloads, images: [linuxserver/qbittorrent, hotio/qbittorrent], port: 8080, login: own}
+  - {id: transmission, name: Transmission, category: downloads, images: [linuxserver/transmission, haugene/transmission-openvpn], port: 9091, login: none}
+  - {id: sabnzbd, name: SABnzbd, category: downloads, images: [linuxserver/sabnzbd, hotio/sabnzbd], port: 8080, login: own}
+  - {id: nzbget, name: NZBGet, category: downloads, images: [linuxserver/nzbget, nzbgetcom/nzbget], port: 6789, login: own}
+
+  # --- Photos ---
+  - {id: immich, name: Immich, category: photos, images: [immich-app/immich-server, altran1502/immich-server], port: 2283, login: own, profile: immich}
+  - {id: immich-ml, name: Immich machine learning, category: photos, role: support, images: [immich-app/immich-machine-learning]}
+  - {id: photoprism, name: PhotoPrism, category: photos, images: [photoprism/photoprism], port: 2342, login: own}
+
+  # --- Smart home ---
+  - {id: home-assistant, name: Home Assistant, category: smart-home, images: [home-assistant/home-assistant, homeassistant/home-assistant, linuxserver/homeassistant], aliases: [homeassistant, haos], port: 8123, login: own, profile: home-assistant}
+  - {id: node-red, name: Node-RED, category: smart-home, images: [nodered/node-red], port: 1880, login: none}
+  - {id: zigbee2mqtt, name: Zigbee2MQTT, category: smart-home, images: [koenkk/zigbee2mqtt], port: 8080, login: none}
+  - {id: esphome, name: ESPHome, category: smart-home, images: [esphome/esphome], port: 6052, login: none}
+  - {id: mosquitto, name: Mosquitto (MQTT), category: smart-home, images: [eclipse-mosquitto], login: own}
+  - {id: frigate, name: Frigate, category: smart-home, images: [blakeblackshear/frigate], port: 8971, scheme: https, login: own}
+  - {id: magicmirror, name: MagicMirror, category: smart-home, images: [karsten13/magicmirror, bastilimbach/docker-magicmirror, michmich/magicmirror], port: 8080, login: none}
+
+  # --- Documents and notes ---
+  - {id: paperless-ngx, name: Paperless-ngx, category: documents, images: [paperless-ngx/paperless-ngx, linuxserver/paperless-ngx], port: 8000, login: own, profile: paperless-ngx}
+  - {id: stirling-pdf, name: Stirling-PDF, category: documents, images: [frooodle/s-pdf, stirling-tools/s-pdf, stirling-tools/stirling-pdf], port: 8080, login: none}
+  - {id: bookstack, name: BookStack, category: documents, images: [linuxserver/bookstack, solidnerd/bookstack], port: 80, login: own}
+  - {id: wikijs, name: Wiki.js, category: documents, images: [requarks/wiki, linuxserver/wikijs], aliases: [wiki-js], port: 3000, login: own}
+  - {id: outline, name: Outline, category: documents, images: [outlinewiki/outline], port: 3000, login: own}
+  - {id: karakeep, name: Karakeep, category: documents, images: [karakeep-app/karakeep, hoarder-app/hoarder], aliases: [hoarder], port: 3000, login: own}
+  - {id: linkding, name: linkding, category: documents, images: [sissbruecker/linkding], port: 9090, login: own}
+  - {id: wallabag, name: wallabag, category: documents, images: [wallabag/wallabag], port: 80, login: own}
+  - {id: freshrss, name: FreshRSS, category: documents, images: [freshrss/freshrss, linuxserver/freshrss], port: 80, login: own}
+  - {id: miniflux, name: Miniflux, category: documents, images: [miniflux/miniflux], port: 8080, login: own}
+  - {id: mealie, name: Mealie, category: documents, images: [hay-kot/mealie, mealie-recipes/mealie], port: 9000, login: own}
+  - {id: tandoor, name: Tandoor Recipes, category: documents, images: [vabene1111/recipes], port: 8080, login: own}
+  - {id: dawarich, name: Dawarich, category: documents, images: [freikin/dawarich], port: 3000, login: own}
+
+  # --- Files and cloud ---
+  - {id: nextcloud, name: Nextcloud, category: files, images: [nextcloud, linuxserver/nextcloud], aliases: [nextcloudpi], port: 80, login: own}
+  - {id: nextcloud-aio, name: Nextcloud AIO, category: files, images: [nextcloud/all-in-one], port: 8080, scheme: https, login: own}
+  - {id: nextcloud-aio-part, name: Nextcloud AIO, category: files, role: support, prefixes: [nextcloud-releases/aio-]}
+  - {id: syncthing, name: Syncthing, category: files, images: [syncthing/syncthing, linuxserver/syncthing], port: 8384, login: own}
+  - {id: filebrowser, name: File Browser, category: files, images: [filebrowser/filebrowser, hurlenko/filebrowser], port: 80, login: own}
+  - {id: minio, name: MinIO, category: files, images: [minio/minio], port: 9001, login: own}
+
+  # --- Security and passwords ---
+  - {id: vaultwarden, name: Vaultwarden, category: security, images: [vaultwarden/server, bitwardenrs/server], port: 80, login: own, profile: vaultwarden}
+  - {id: authelia, name: Authelia, category: security, images: [authelia/authelia], port: 9091, login: own}
+  - {id: authentik, name: authentik, category: security, images: [goauthentik/server], port: 9000, login: own}
+  - {id: crowdsec, name: CrowdSec, category: security, images: [crowdsecurity/crowdsec]}
+
+  # --- Network, proxies and remote access ---
+  - {id: nginx-proxy-manager, name: Nginx Proxy Manager, category: network, images: [jc21/nginx-proxy-manager, jlesage/nginx-proxy-manager], port: 81, login: own}
+  - {id: traefik, name: Traefik, category: network, images: [traefik], port: 8080, login: none}
+  - {id: caddy, name: Caddy, category: network, images: [caddy, lucaslorentz/caddy-docker-proxy], port: 80}
+  - {id: nginx, name: Nginx (web server), category: network, images: [nginx, linuxserver/nginx, nginxinc/nginx-unprivileged], port: 80}
+  - {id: httpd, name: Apache (web server), category: network, images: [httpd], port: 80}
+  - {id: cloudflared, name: Cloudflare Tunnel, category: network, images: [cloudflare/cloudflared, figro/unraid-cloudflared-tunnel]}
+  - {id: tailscale, name: Tailscale, category: network, images: [tailscale/tailscale]}
+  - {id: wg-easy, name: WireGuard (wg-easy), category: network, images: [wg-easy/wg-easy, weejewel/wg-easy], port: 51821, login: own}
+  - {id: wireguard, name: WireGuard, category: network, images: [linuxserver/wireguard]}
+  - {id: newt, name: Newt (Pangolin tunnel), category: network, images: [fosrl/newt]}
+  - {id: pangolin, name: Pangolin, category: network, images: [fosrl/pangolin], port: 3002, login: own}
+  - {id: gerbil, name: Gerbil (Pangolin), category: network, role: support, images: [fosrl/gerbil]}
+  - {id: pihole, name: Pi-hole, category: network, images: [pihole/pihole], port: 80, path: /admin, login: own}
+  - {id: adguardhome, name: AdGuard Home, category: network, images: [adguard/adguardhome], port: 3000, login: own}
+  - {id: unifi, name: UniFi Network, category: network, images: [linuxserver/unifi-network-application, linuxserver/unifi-controller, jacobalberty/unifi], port: 8443, scheme: https, login: own}
+  - {id: portracker, name: Portracker, category: network, images: [mostafawahied/portracker], port: 4999, login: none}
+
+  # --- Monitoring and dashboards ---
+  - {id: uptime-kuma, name: Uptime Kuma, category: monitoring, images: [louislam/uptime-kuma], port: 3001, login: own}
+  - {id: grafana, name: Grafana, category: monitoring, images: [grafana/grafana, grafana/grafana-oss, grafana/grafana-enterprise], port: 3000, login: own}
+  - {id: prometheus, name: Prometheus, category: monitoring, images: [prom/prometheus], port: 9090, login: none}
+  - {id: influxdb, name: InfluxDB, category: monitoring, images: [influxdb], port: 8086, login: own}
+  - {id: netdata, name: Netdata, category: monitoring, images: [netdata/netdata], port: 19999, login: none}
+  - {id: glances, name: Glances, category: monitoring, images: [nicolargo/glances], port: 61208, login: none}
+  - {id: beszel, name: Beszel, category: monitoring, images: [henrygd/beszel], port: 8090, login: own}
+  - {id: beszel-agent, name: Beszel agent, category: monitoring, role: support, images: [henrygd/beszel-agent]}
+  - {id: scrutiny, name: Scrutiny, category: monitoring, images: [analogj/scrutiny], port: 8080, login: none}
+  - {id: speedtest-tracker, name: Speedtest Tracker, category: monitoring, images: [linuxserver/speedtest-tracker, alexjustesen/speedtest-tracker], port: 80, login: own}
+  - {id: changedetection, name: changedetection.io, category: monitoring, images: [dgtlmoon/changedetection.io], aliases: [changedetection.io], port: 5000, login: none}
+  - {id: dozzle, name: Dozzle, category: monitoring, images: [amir20/dozzle], port: 8080, login: none}
+  - {id: homepage, name: Homepage, category: dashboard, images: [gethomepage/homepage, benphelps/homepage], port: 3000, login: none}
+  - {id: homarr, name: Homarr, category: dashboard, images: [ajnart/homarr, homarr-labs/homarr], port: 7575, login: own}
+  - {id: heimdall, name: Heimdall, category: dashboard, images: [linuxserver/heimdall], port: 80, login: none}
+  - {id: dashy, name: Dashy, category: dashboard, images: [lissy93/dashy], port: 8080, login: none}
+  - {id: organizr, name: Organizr, category: dashboard, images: [organizr/organizr], port: 80, login: own}
+
+  # --- Container management and updates ---
+  - {id: portainer, name: Portainer, category: management, images: [portainer/portainer-ce, portainer/portainer-ee, portainer/portainer], port: 9443, scheme: https, login: own}
+  - {id: portainer-agent, name: Portainer agent, category: management, role: support, images: [portainer/agent]}
+  - {id: dockge, name: Dockge, category: management, images: [louislam/dockge], port: 5001, login: own}
+  - {id: komodo, name: Komodo, category: management, images: [moghtech/komodo-core], port: 9120, login: own}
+  - {id: watchtower, name: Watchtower, category: management, images: [containrrr/watchtower, nickfedor/watchtower]}
+  - {id: diun, name: Diun, category: management, images: [crazymax/diun]}
+  - {id: nestward, name: Nestward, category: management, images: [nestward/nestward], port: 8470, login: own}
+  - {id: docker-socket-proxy, name: Docker socket proxy, category: management, role: support, images: [tecnativa/docker-socket-proxy, linuxserver/socket-proxy]}
+
+  # --- AI ---
+  - {id: ollama, name: Ollama, category: ai, images: [ollama/ollama], port: 11434, login: none, profile: ollama-3b}
+  - {id: open-webui, name: Open WebUI, category: ai, images: [open-webui/open-webui], port: 8080, login: own}
+  - {id: librechat, name: LibreChat, category: ai, images: [danny-avila/librechat, danny-avila/librechat-dev], port: 3080, login: own}
+  - {id: searxng, name: SearXNG, category: ai, images: [searxng/searxng], port: 8080, login: none}
+
+  # --- Development and web sites ---
+  - {id: gitea, name: Gitea, category: development, images: [gitea/gitea], port: 3000, login: own}
+  - {id: forgejo, name: Forgejo, category: development, images: [forgejo/forgejo], port: 3000, login: own}
+  - {id: code-server, name: VS Code (in the browser), category: development, images: [linuxserver/code-server, codercom/code-server, ahmadnassri/vscode-server, gitpod/openvscode-server], aliases: [vscode-server], port: 8443, login: own}
+  - {id: n8n, name: n8n, category: development, images: [n8nio/n8n], port: 5678, login: own}
+  - {id: it-tools, name: IT-Tools, category: development, images: [corentinth/it-tools], port: 80, login: none}
+  - {id: wordpress, name: WordPress, category: web, images: [wordpress, linuxserver/wordpress, bitnami/wordpress], port: 80, login: own}
+  - {id: ghost, name: Ghost, category: web, images: [ghost], port: 2368, login: own}
+
+  # --- Finance and messages ---
+  - {id: actual, name: Actual Budget, category: finance, images: [actualbudget/actual-server], aliases: [actual-server], port: 5006, login: own}
+  - {id: firefly-iii, name: Firefly III, category: finance, images: [fireflyiii/core], port: 8080, login: own}
+  - {id: ntfy, name: ntfy, category: communication, images: [binwiederhier/ntfy], port: 80, login: none}
+  - {id: gotify, name: Gotify, category: communication, images: [gotify/server], port: 80, login: own}
+  - {id: synapse, name: Matrix Synapse, category: communication, images: [matrixdotorg/synapse], port: 8008, login: own}
+
+  # --- Backup ---
+  - {id: duplicati, name: Duplicati, category: backup, images: [duplicati/duplicati, linuxserver/duplicati], port: 8200, login: own}
+  - {id: kopia, name: Kopia, category: backup, images: [kopia/kopia], port: 51515, login: own}
+
+  # --- Helpers: databases and caches (shown under the app they serve) ---
+  - {id: postgres, name: PostgreSQL, category: database, role: support, images: [postgres, bitnami/postgresql, tensorchord/pgvecto-rs, immich-app/postgres], aliases: [postgresql, pgvecto-rs]}
+  - {id: mariadb, name: MariaDB, category: database, role: support, images: [mariadb, linuxserver/mariadb, bitnami/mariadb]}
+  - {id: mysql, name: MySQL, category: database, role: support, images: [mysql, bitnami/mysql]}
+  - {id: mongo, name: MongoDB, category: database, role: support, images: [mongo, bitnami/mongodb], aliases: [mongodb]}
+  - {id: redis, name: Redis, category: database, role: support, images: [redis, bitnami/redis]}
+  - {id: valkey, name: Valkey, category: database, role: support, images: [valkey/valkey, bitnami/valkey]}

@@ -1,0 +1,24 @@
+# Jellyfin – films, series and music at home.
+id: jellyfin
+name: Jellyfin
+category: media
+homepage: https://jellyfin.org
+requires:
+  arch: [amd64, arm64]
+  ram_min_gb: 1
+  ram_recommended_gb: 2
+  ram_use_gb: 0.75
+  cores_min: 2
+  cores_recommended: 4
+  gpu: helps
+  gpu_vendors: [nvidia, amd, intel]
+  disk_free_gb: 5
+  ssd: none
+  virtualization: none
+text:
+  en:
+    note: Converting video on the fly (transcoding) needs a graphics chip. Intel graphics is enough for most homes.
+    suggestion: Play files in a format the TV understands directly, or run Jellyfin on a machine with Intel graphics.
+  sv:
+    note: Att konvertera video medan den spelas (omkodning) kräver ett grafikchip. Intel-grafik räcker för de flesta hem.
+    suggestion: Spela filer i ett format som tv:n klarar direkt, eller kör Jellyfin på en maskin med Intel-grafik.

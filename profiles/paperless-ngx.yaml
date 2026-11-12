@@ -1,0 +1,23 @@
+# Paperless-ngx – scanned documents with text search.
+id: paperless-ngx
+name: Paperless-ngx
+category: documents
+homepage: https://docs.paperless-ngx.com
+requires:
+  arch: [amd64, arm64]
+  ram_min_gb: 2
+  ram_recommended_gb: 4
+  ram_use_gb: 1
+  cores_min: 1
+  cores_recommended: 2
+  gpu: none
+  disk_free_gb: 5
+  ssd: none
+  virtualization: none
+text:
+  en:
+    note: Reading the text in a new scan (OCR) uses a lot of processor power for a short while.
+    suggestion: Run Paperless-ngx on a machine with at least 4 GB of RAM.
+  sv:
+    note: Att läsa texten i en ny inskanning (OCR) tar mycket processorkraft en kort stund.
+    suggestion: Kör Paperless-ngx på en maskin med minst 4 GB RAM.

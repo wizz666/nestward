@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 	"errors"
+	"net"
 	"regexp"
 	"sort"
 	"strconv"
@@ -23,6 +24,9 @@ type Port struct {
 	Host      int    `json:"host,omitempty"` // published on the machine, 0 = not published
 	Container int    `json:"container"`
 	Proto     string `json:"proto"`
+	// IP is set when the port is published on one address of the machine
+	// only (for example 192.168.1.20:8080:80). Empty = every address.
+	IP string `json:"ip,omitempty"`
 }
 
 // WebLink says where a service's web page is. An empty Host means "the
@@ -229,6 +233,17 @@ func sharedNetwork(n string) bool {
 	return macvlanLike(n) || strings.HasPrefix(n, "container:")
 }
 
+// boundIP keeps the address a port is published on when it is one
+// specific address. Every address (0.0.0.0, ::) gives "", and so does
+// loopback, which other machines and containers cannot reach anyway.
+func boundIP(ip string) string {
+	a := net.ParseIP(ip)
+	if a == nil || a.IsUnspecified() || a.IsLoopback() {
+		return ""
+	}
+	return a.String()
+}
+
 var macvlanRe = regexp.MustCompile(`^(br|eth|bond|wlan|vhost)\d+(\.\d+)?$`)
 
 // macvlanLike matches Unraid's custom networks (br0, eth0, bond0) where
@@ -240,7 +255,7 @@ func ports(ps []ContainerPort) []Port {
 	out := []Port{}
 	for _, p := range ps {
 		// Docker lists IPv4 and IPv6 bindings separately; keep one.
-		x := Port{Host: p.PublicPort, Container: p.PrivatePort, Proto: p.Type}
+		x := Port{Host: p.PublicPort, Container: p.PrivatePort, Proto: p.Type, IP: boundIP(p.IP)}
 		if seen[x] {
 			continue
 		}
@@ -266,23 +281,24 @@ func webLink(c Container, ps []Port, sig Signature, known bool) *WebLink {
 	if macvlanLike(c.HostConfig.NetworkMode) {
 		ownIP = c.NetworkSettings.Networks[c.HostConfig.NetworkMode].IPAddress
 	}
-	// publishedFor finds the machine port for a port inside the container.
-	publishedFor := func(cp int) (int, bool) {
+	// publishedFor finds the machine port for a port inside the container,
+	// and the one address it is published on, if any.
+	publishedFor := func(cp int) (int, string, bool) {
 		if hostNet || ownIP != "" {
-			return cp, true
+			return cp, "", true
 		}
 		for _, p := range ps {
 			if p.Container == cp && p.Host != 0 && p.Proto == "tcp" {
-				return p.Host, true
+				return p.Host, p.IP, true
 			}
 		}
 		// Some Unraid templates name the machine port instead.
 		for _, p := range ps {
 			if p.Host == cp && p.Proto == "tcp" {
-				return cp, true
+				return cp, p.IP, true
 			}
 		}
-		return 0, false
+		return 0, "", false
 	}
 
 	if m := unraidWebUI.FindStringSubmatch(c.Labels["net.unraid.docker.webui"]); m != nil {
@@ -294,8 +310,11 @@ func webLink(c Container, ps []Port, sig Signature, known bool) *WebLink {
 		}
 		if m[3] != "" {
 			cp, _ := strconv.Atoi(m[3])
-			if hp, ok := publishedFor(cp); ok {
+			if hp, ip, ok := publishedFor(cp); ok {
 				l.Port = hp
+				if l.Host == "" {
+					l.Host = ip
+				}
 			}
 		} else {
 			l.Port, _ = strconv.Atoi(m[4])
@@ -305,16 +324,20 @@ func webLink(c Container, ps []Port, sig Signature, known bool) *WebLink {
 		}
 	}
 	if known && sig.Port != 0 {
-		if hp, ok := publishedFor(sig.Port); ok {
-			return &WebLink{Scheme: sig.Scheme, Host: ownIP, Port: hp, Path: sig.Path}
+		if hp, ip, ok := publishedFor(sig.Port); ok {
+			h := ownIP
+			if h == "" {
+				h = ip
+			}
+			return &WebLink{Scheme: sig.Scheme, Host: h, Port: hp, Path: sig.Path}
 		}
 	}
 	// Last resort: a web app with exactly one published TCP port.
 	if known && sig.Port != 0 || c.Labels["net.unraid.docker.webui"] != "" {
-		var only []int
+		var only []Port
 		for _, p := range ps {
 			if p.Host != 0 && p.Proto == "tcp" {
-				only = append(only, p.Host)
+				only = append(only, p)
 			}
 		}
 		if len(only) == 1 {
@@ -322,7 +345,7 @@ func webLink(c Container, ps []Port, sig Signature, known bool) *WebLink {
 			if known {
 				scheme = sig.Scheme
 			}
-			return &WebLink{Scheme: scheme, Port: only[0]}
+			return &WebLink{Scheme: scheme, Host: only[0].IP, Port: only[0].Host}
 		}
 	}
 	return nil

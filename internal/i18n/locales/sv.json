@@ -100,6 +100,8 @@
   "ui.guests_stats": "{guests} virtuella maskiner och containrar i Proxmox · {running} igång",
   "ui.no_login": "Ingen inloggning",
   "ui.no_login_hint": "Alla som når appen kan använda den.",
+  "ui.web_not_checked": "Webbsidan bevakas inte: inget svar på den gissade adressen",
+  "ui.web_not_checked_hint": "Nestward fick inget svar från {url}. Om sidan ligger på en annan adress: kör \"nestward config set host.address <maskinens IP>\" på servern, eller starta Nestward med --add-host=host.docker.internal:host-gateway.",
   "state.running": "Igång",
   "state.exited": "Stoppad",
   "state.paused": "Pausad",

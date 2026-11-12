@@ -100,6 +100,8 @@
   "ui.guests_stats": "{guests} virtual machines and containers in Proxmox · {running} running",
   "ui.no_login": "No login",
   "ui.no_login_hint": "Anyone who can reach this app can use it.",
+  "ui.web_not_checked": "Web page not watched: no answer at the guessed address",
+  "ui.web_not_checked_hint": "Nestward got no answer from {url}. If the page lives at another address, run \"nestward config set host.address <the machine's IP>\" on the server, or start Nestward with --add-host=host.docker.internal:host-gateway.",
   "state.running": "Running",
   "state.exited": "Stopped",
   "state.paused": "Paused",

@@ -231,6 +231,32 @@ func TestMacvlanUsesContainerIP(t *testing.T) {
 	}
 }
 
+// A port published on one address only is checked on that address: the
+// Docker gateway or host.docker.internal would not reach it.
+func TestPortBoundToOneAddress(t *testing.T) {
+	jf := Container{ID: "a", Names: []string{"/jf"}, Image: "jellyfin/jellyfin", State: "running",
+		Ports: []ContainerPort{{IP: "192.168.1.20", PrivatePort: 8096, PublicPort: 8096, Type: "tcp"}}}
+	all := Container{ID: "b", Names: []string{"/jf2"}, Image: "jellyfin/jellyfin", State: "running",
+		Ports: []ContainerPort{{IP: "0.0.0.0", PrivatePort: 8096, PublicPort: 18096, Type: "tcp"},
+			{IP: "::", PrivatePort: 8096, PublicPort: 18096, Type: "tcp"}}}
+	lo := Container{ID: "c", Names: []string{"/jf3"}, Image: "jellyfin/jellyfin", State: "running",
+		Ports: []ContainerPort{{IP: "127.0.0.1", PrivatePort: 8096, PublicPort: 28096, Type: "tcp"}}}
+	ss := Recognize([]Container{jf, all, lo}, catalog(t))
+	m := byName(ss)
+	if w := m["jf"].Web; w == nil || w.Host != "192.168.1.20" || w.Port != 8096 {
+		t.Errorf("one address: web = %+v", w)
+	}
+	if w := m["jf2"].Web; w == nil || w.Host != "" || w.Port != 18096 {
+		t.Errorf("every address: web = %+v", w)
+	}
+	if len(m["jf2"].Ports) != 1 {
+		t.Errorf("IPv4 and IPv6 bindings should be one port: %+v", m["jf2"].Ports)
+	}
+	if w := m["jf3"].Web; w == nil || w.Host != "" {
+		t.Errorf("loopback: web = %+v", w)
+	}
+}
+
 type fakeLister struct {
 	cs  []Container
 	err error

@@ -33,11 +33,40 @@ func localHost(s *config.Settings) func(context.Context) string {
 			return v
 		}
 		if _, err := os.Stat("/.dockerenv"); err == nil {
-			// Needs --add-host=host.docker.internal:host-gateway on Linux.
+			// Set with --add-host=host.docker.internal:host-gateway. When it
+			// is missing, the container's default gateway is the machine.
+			if _, err := net.DefaultResolver.LookupHost(ctx, "host.docker.internal"); err == nil {
+				return "host.docker.internal"
+			}
+			if gw := defaultGateway("/proc/net/route"); gw != "" {
+				return gw
+			}
 			return "host.docker.internal"
 		}
 		return "127.0.0.1"
 	}
+}
+
+// defaultGateway reads the default route's gateway from a Linux route
+// table (/proc/net/route), or "" when there is none.
+func defaultGateway(path string) string {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(string(b), "\n")[1:] {
+		f := strings.Fields(line)
+		if len(f) < 3 || f[1] != "00000000" {
+			continue
+		}
+		var gw uint32
+		if _, err := fmt.Sscanf(f[2], "%08X", &gw); err != nil || gw == 0 {
+			continue
+		}
+		// The kernel prints the address in host (little-endian) order.
+		return net.IPv4(byte(gw), byte(gw>>8), byte(gw>>16), byte(gw>>24)).String()
+	}
+	return ""
 }
 
 func openSettings(data string) (*config.Settings, func(), error) {

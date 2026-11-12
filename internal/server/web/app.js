@@ -165,6 +165,14 @@
       li.classList.add("svc-down");
       body.appendChild(el("div", "svc-alarm", fill(t("ui.status_down_since"), { time: clock(bad.since) })));
     }
+    // A page that never answered is not watched: most likely it lives at
+    // another address than Nestward guessed. Say so, quietly.
+    var wc = state.checks["web/" + m.id + "/" + s.name];
+    if (!silent && !bad && s.state === "running" && wc && wc.status === "stopped") {
+      var nc = el("div", "svc-res", t("ui.web_not_checked"));
+      nc.title = fill(t("ui.web_not_checked_hint"), { url: wc.target || "" });
+      body.appendChild(nc);
+    }
 
     if (s.web && s.state === "running") {
       var actions = el("div", "svc-actions");

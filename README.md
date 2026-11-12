@@ -10,7 +10,36 @@ your own domain with one click, and give the home a health score.
 
 > Status: **all five version-1 features are in** – hardware analysis,
 > discovery, monitoring and alerts, publishing (Cloudflare and Tailscale)
-> and the health score – plus login and encrypted agents. Not released yet.
+> and the health score – plus login and encrypted agents. Early release:
+> it runs every day on a real home setup, but expect rough edges.
+
+## Install
+
+One container on the machine you want to watch (amd64 or arm64):
+
+```sh
+docker run -d --name nestward --restart unless-stopped   -p 8470:8470 -p 8472:8472   -v nestward-data:/data   -v /:/host:ro   -v /var/run/docker.sock:/var/run/docker.sock:ro   --add-host=host.docker.internal:host-gateway   ghcr.io/wizz666/nestward:latest
+```
+
+Then:
+
+1. Read the one-time setup code: `docker logs nestward`
+2. Open `http://<server-ip>:8470`, create your account and scan the
+   two-step code with an authenticator app.
+3. Follow the health score: it tells you what to set up next (alerts,
+   the outside watch, other machines).
+
+Port 8472 is only needed when other machines report in (see
+*Adding another machine*). Keep 8470 inside your home network or Tailscale –
+do not forward it on your router.
+
+Without Docker: download `nestward-linux-amd64` or `-arm64` from the
+[latest release](https://github.com/wizz666/nestward/releases/latest),
+make it executable and run `./nestward serve`.
+
+Update: `docker pull ghcr.io/wizz666/nestward:latest`, then remove and start
+the container again with the same command. Your data stays in the
+`nestward-data` volume.
 
 ## What works now
 
@@ -63,7 +92,7 @@ your own domain with one click, and give the home a health score.
   *runs well*, *runs slowly* or *cannot run*, with a suggestion. With several
   machines it suggests where an app would run better.
 
-## Try it with Docker
+## Build it yourself
 
 ```sh
 docker build -t nestward .
@@ -238,7 +267,7 @@ ten minutes. `NESTWARD_PROXMOX=off` turns it off.
 
 ## Developing
 
-Needs Go 1.26 or newer. No C compiler: SQLite uses a pure-Go driver.
+Needs Go 1.27 or newer. No C compiler: SQLite uses a pure-Go driver.
 
 ```sh
 make test     # go vet + go test
@@ -297,6 +326,10 @@ and whether the app has its own login. A test checks the file, and
 ---
 
 ## På svenska
+
+**Installera:** kör kommandot under *Install* ovan på servern, läs
+engångskoden med `docker logs nestward`, öppna `http://<serverns-ip>:8470`
+och skapa ditt konto. Hälsopoängen visar sedan vad du bör ställa in härnäst.
 
 Hemvakten är ett program som körs ovanpå den hemmaserver du redan har. Det här
 är första delmålet: programmet startar, visar ett webbgränssnitt på svenska

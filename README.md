@@ -33,6 +33,11 @@ Port 8472 is only needed when other machines report in (see
 *Adding another machine*). Keep 8470 inside your home network or Tailscale –
 do not forward it on your router.
 
+**On a server with a public address (a VPS):** Docker opens published ports
+past the firewall (ufw does not stop them). Bind them to one address instead,
+for example `-p 127.0.0.1:8470:8470` and reach the page through an SSH tunnel
+or Tailscale, or `-p <tailscale-ip>:8470:8470`.
+
 Without Docker: download `nestward-linux-amd64` or `-arm64` from the
 [latest release](https://github.com/wizz666/nestward/releases/latest),
 make it executable and run `./nestward serve`.
@@ -330,6 +335,8 @@ and whether the app has its own login. A test checks the file, and
 **Installera:** kör kommandot under *Install* ovan på servern, läs
 engångskoden med `docker logs nestward`, öppna `http://<serverns-ip>:8470`
 och skapa ditt konto. Hälsopoängen visar sedan vad du bör ställa in härnäst.
+På en VPS med publik adress: bind portarna till en adress, till exempel
+`-p 127.0.0.1:8470:8470`, eftersom Docker går förbi brandväggen.
 
 Hemvakten är ett program som körs ovanpå den hemmaserver du redan har. Det här
 är första delmålet: programmet startar, visar ett webbgränssnitt på svenska

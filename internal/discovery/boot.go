@@ -65,7 +65,9 @@ func ReadBoot(root string, r *Result) {
 		}
 	}
 
-	b.VMs = libvirtVMs(path("etc/libvirt/qemu"), path("var/run/libvirt/qemu"))
+	// /var/run is a link to /run on most systems. Read through /host the
+	// link would point into Nestward's own container, so try both.
+	b.VMs = libvirtVMs(path("etc/libvirt/qemu"), path("run/libvirt/qemu"), path("var/run/libvirt/qemu"))
 	if b.Unraid != nil || len(b.VMs) > 0 {
 		r.Boot = b
 	}
@@ -96,6 +98,14 @@ func (r *Result) NotStarting() []string {
 
 func exists(p string) bool {
 	_, err := os.Stat(p)
+	return err == nil
+}
+
+// linkExists is true for a file or a link, even one whose target cannot
+// be followed: libvirt's autostart entries are absolute links, which point
+// into Nestward's own container when read through /host.
+func linkExists(p string) bool {
+	_, err := os.Lstat(p)
 	return err == nil
 }
 
@@ -134,8 +144,8 @@ func unraidAutostart(file string) map[string]bool {
 
 // libvirtVMs lists defined virtual machines: one XML file each in conf,
 // a link in conf/autostart when it starts with the machine, and a .pid
-// file in run while it is running.
-func libvirtVMs(conf, run string) []BootVM {
+// file in one of runDirs while it is running.
+func libvirtVMs(conf string, runDirs ...string) []BootVM {
 	files, err := filepath.Glob(filepath.Join(conf, "*.xml"))
 	if err != nil || len(files) == 0 {
 		return nil
@@ -143,10 +153,16 @@ func libvirtVMs(conf, run string) []BootVM {
 	var out []BootVM
 	for _, f := range files {
 		name := strings.TrimSuffix(filepath.Base(f), ".xml")
+		running := false
+		for _, run := range runDirs {
+			if exists(filepath.Join(run, name+".pid")) {
+				running = true
+			}
+		}
 		out = append(out, BootVM{
 			Name:      name,
-			Running:   exists(filepath.Join(run, name+".pid")),
-			Autostart: exists(filepath.Join(conf, "autostart", name+".xml")),
+			Running:   running,
+			Autostart: linkExists(filepath.Join(conf, "autostart", name+".xml")),
 		})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })

@@ -28,9 +28,15 @@ func TestReadBootUnraid(t *testing.T) {
 	writeFile(t, root, "boot/config/domain.cfg", "SERVICE=\"enable\"\n")
 	writeFile(t, root, "var/lib/docker/unraid-autostart", "plex\nvaultwarden 10\n")
 	writeFile(t, root, "etc/libvirt/qemu/Home Assistant.xml", "<domain/>")
-	writeFile(t, root, "etc/libvirt/qemu/autostart/Home Assistant.xml", "<domain/>")
+	// Like on Unraid: an absolute link that cannot be followed through /host.
+	if err := os.MkdirAll(filepath.Join(root, "etc/libvirt/qemu/autostart"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("/etc/libvirt/qemu/does-not-resolve.xml", filepath.Join(root, "etc/libvirt/qemu/autostart/Home Assistant.xml")); err != nil {
+		writeFile(t, root, "etc/libvirt/qemu/autostart/Home Assistant.xml", "<domain/>") // no symlinks here (Windows)
+	}
 	writeFile(t, root, "etc/libvirt/qemu/test-vm.xml", "<domain/>")
-	writeFile(t, root, "var/run/libvirt/qemu/Home Assistant.pid", "123")
+	writeFile(t, root, "run/libvirt/qemu/Home Assistant.pid", "123") // /var/run is a link to /run
 	writeFile(t, root, "var/run/libvirt/qemu/test-vm.pid", "456")
 
 	r := Result{Available: true, Services: []Service{

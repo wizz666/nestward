@@ -21,6 +21,9 @@ var answers = map[string]string{
 		{"id":"lxc/105","type":"lxc","node":"pve","vmid":105,"name":"appar","status":"running","maxcpu":4,"maxmem":4294967296,"mem":1975095296,"maxdisk":31526391808,"disk":13137076224,"uptime":220835,"template":0},
 		{"id":"lxc/104","type":"lxc","node":"pve","vmid":104,"name":"ollama","status":"running","maxcpu":4,"maxmem":8589934592,"mem":84926464,"maxdisk":67452583936,"disk":48158195712,"tags":"proxmox-helper-scripts;ai","template":0},
 		{"id":"lxc/200","type":"lxc","node":"other","vmid":200,"name":"elsewhere","status":"running","template":0}]`,
+	"/nodes/pve/storage": `[{"active":1,"content":"vztmpl,iso,backup","storage":"local","type":"dir"}]`,
+	"/nodes/pve/storage/local/content": `[{"content":"backup","ctime":1789110410,"format":"tar.zst","subtype":"lxc","vmid":105,"volid":"local:backup/vzdump-lxc-105-2026_09_11-09_06_50.tar.zst"},
+		{"content":"backup","ctime":1789000000,"subtype":"lxc","vmid":105,"volid":"local:backup/old.tar.zst"}]`,
 	"/nodes/pve/lxc/105/interfaces": `[{"name":"lo","ip-addresses":[{"ip-address":"127.0.0.1","ip-address-type":"inet"}]},
 		{"name":"docker0","ip-addresses":[{"ip-address":"172.17.0.1","ip-address-type":"inet"}]},
 		{"name":"eth0","ip-addresses":[{"ip-address":"192.168.1.188","ip-address-type":"inet"},{"ip-address":"fe80::1","ip-address-type":"inet6"}]}]`,
@@ -65,8 +68,8 @@ func TestGuests(t *testing.T) {
 		}
 	}
 	r.WaitLookups()
-	if calls != 3 {
-		t.Errorf("first run made %d calls, want 3 (the list and two addresses)", calls)
+	if calls != 5 {
+		t.Errorf("first run made %d calls, want 5 (the list, two backup reads and two addresses)", calls)
 	}
 	gs, _ := r.Guests(context.Background())
 	by := map[int]discovery.Guest{}
@@ -81,6 +84,12 @@ func TestGuests(t *testing.T) {
 	}
 	if g := by[105]; g.Type != "ct" || !g.OnBoot || g.IP != "192.168.1.188" || g.DiskUsed != 13137076224 {
 		t.Errorf("ct 105 = %+v", g)
+	}
+	if g := by[105]; !g.BackupChecked || g.LastBackup == nil || g.LastBackup.Unix() != 1789110410 {
+		t.Errorf("ct 105 backup = %v %v, want the newest", g.BackupChecked, g.LastBackup)
+	}
+	if g := by[103]; !g.BackupChecked || g.LastBackup != nil {
+		t.Errorf("vm 103 has no backup: %v %v", g.BackupChecked, g.LastBackup)
 	}
 	if g := by[104]; g.IP != "192.168.1.150" || g.OnBoot || strings.Join(g.Tags, ",") != "proxmox-helper-scripts,ai" {
 		t.Errorf("ct 104 (static address) = %+v", g)
@@ -105,8 +114,8 @@ func TestGuests(t *testing.T) {
 	before = calls
 	r.Guests(context.Background())
 	r.WaitLookups()
-	if calls-before != 3 {
-		t.Errorf("after 10 minutes the addresses are looked up again: %d calls", calls-before)
+	if calls-before != 5 {
+		t.Errorf("after 10 minutes the addresses and backups are read again: %d calls", calls-before)
 	}
 }
 

@@ -107,6 +107,12 @@ the container again with the same command. Your data stays in the
   boot", libvirt virtual machines without autostart, and an Unraid array
   that waits for someone to press Start. It cannot see the BIOS setting
   that switches the machine itself back on.
+- Backup check: finds the newest backup of every running Proxmox guest
+  (vzdump, any storage that holds backups), the folders Unraid's Easy
+  Backup and Appdata Backup write to, backup containers that run and exit
+  (borg, restic, Nextcloud AIO's borgbackup …) and extra folders named in
+  `NESTWARD_BACKUP_PATHS`. Missing, failed or older than 8 days costs
+  health points.
 - Health score: one number from 0 to 100 for the home, with a plain list of
   what to do. Nestward only deducts for what it can see (alerts, outside
   watch, silent machines, services not working, full disks, low memory,
@@ -368,6 +374,7 @@ det är och visar dem som en karta med länkar. Varje minut kontrolleras att
 tjänsterna fungerar, och larm skickas till mobilen via ntfy om något slutar
 fungera. En vakt utanför huset larmar om hela hemmet blir tyst.
 Den kontrollerar också att allt som körs startar av sig självt efter ett strömavbrott.
+Och att det finns färska backuper: Proxmox, Unraids backuptillägg och backupcontainrar.
 Webbsidan kräver inloggning med lösenord och tvåstegskod, och tjänster kan
 publiceras på den egna domänen med ett klick, med inloggning framför och en
 ångra-knapp.

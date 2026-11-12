@@ -150,8 +150,19 @@ func discoverer() (func(context.Context) discovery.Result, error) {
 			discovery.AddGuests(&r, gs, cat, err)
 		}
 		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
+		discovery.ReadBackups(os.Getenv("NESTWARD_HOST_ROOT"), backupPaths(), &r)
 		return r
 	}, nil
+}
+
+// backupPaths are extra backup folders to watch (host paths, comma
+// separated), for tools Nestward does not find by itself.
+func backupPaths() []string {
+	v := os.Getenv("NESTWARD_BACKUP_PATHS")
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ",")
 }
 
 func discover(ctx context.Context, args []string, w io.Writer) error {
@@ -179,6 +190,7 @@ func discover(ctx context.Context, args []string, w io.Writer) error {
 	}
 	if *from == "" {
 		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
+		discovery.ReadBackups(os.Getenv("NESTWARD_HOST_ROOT"), backupPaths(), &r)
 	}
 	if *asJSON {
 		enc := json.NewEncoder(w)
@@ -208,6 +220,25 @@ func discover(ctx context.Context, args []string, w io.Writer) error {
 		st.Total, st.Running, st.Recognized, st.Total-st.Own, st.Percent, st.Own)
 	if b := r.Boot; b != nil && b.Unraid != nil && !b.Unraid.ArrayAutostart {
 		fmt.Fprintln(w, "After a power cut: the Unraid array does not start by itself.")
+	}
+	for _, b := range r.Backups {
+		when := "none found"
+		if b.Last != nil {
+			when = b.Last.Local().Format("2006-01-02 15:04")
+		}
+		if b.Failed {
+			when += " (failed: " + b.Detail + ")"
+		}
+		fmt.Fprintf(w, "Backup %s: %s\n", b.Name, when)
+	}
+	for _, s := range r.Services {
+		if g := s.Guest; g != nil && g.BackupChecked && s.State == "running" {
+			when := "no backup"
+			if g.LastBackup != nil {
+				when = g.LastBackup.Local().Format("2006-01-02 15:04")
+			}
+			fmt.Fprintf(w, "Backup %s %d (%s): %s\n", g.Type, g.VMID, g.Name, when)
+		}
 	}
 	if names := r.NotStarting(); len(names) > 0 {
 		fmt.Fprintf(w, "After a power cut these do not start by themselves: %s\n", strings.Join(names, ", "))

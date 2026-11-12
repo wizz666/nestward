@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/wizz666/nestward/internal/alert"
 	"github.com/wizz666/nestward/internal/discovery"
@@ -63,6 +64,8 @@ type Input struct {
 	Publications []publish.Publication
 	// Exposure is what each public address shows a stranger.
 	Exposure []exposure.Finding
+	// Now is the time to measure backup ages from; zero = time.Now().
+	Now time.Time
 }
 
 // Caps keep one kind of problem from eating the whole score.
@@ -86,6 +89,13 @@ const (
 	ptsNoAutostart      = 3 // a running service that will not come back after a power cut
 	maxNoAutostart      = 15
 	ptsArrayManual      = 10 // Unraid's array waits for someone to press Start
+	ptsNoBackup         = 3  // a running Proxmox guest with no backup at all
+	maxNoBackup         = 15
+	ptsBackupStale      = 4 // newest backup older than backupMaxAge
+	ptsBackupFailed     = 5 // the last backup run failed
+	maxBackupStale      = 12
+	ptsBackupNone       = 5 // no backups found anywhere
+	backupMaxAge        = 8 * 24 * time.Hour
 )
 
 // Compute works out the score.
@@ -216,6 +226,76 @@ func Compute(in Input, t i18n.T) Report {
 		good = append(good, t.Get("health.good.boot"))
 	}
 
+	// Backups: there are some, and they are fresh.
+	now := in.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+	days := func(at time.Time) string { return strconv.Itoa(int(now.Sub(at).Hours() / 24)) }
+	sources, backupBad, noBackup, stale := 0, false, 0, 0
+	for _, m := range in.Machines {
+		d := m.Discovery
+		if d == nil || !d.Available {
+			continue
+		}
+		var missing []string
+		for _, s := range d.Services {
+			g := s.Guest
+			if g == nil || !g.BackupChecked || s.State != "running" {
+				continue
+			}
+			sources++
+			name := g.Name
+			if name == "" {
+				name = s.Name
+			}
+			switch {
+			case g.LastBackup == nil:
+				missing = append(missing, name)
+			case now.Sub(*g.LastBackup) > backupMaxAge:
+				backupBad = true
+				pts := min(ptsBackupStale, maxBackupStale-stale)
+				stale += pts
+				add("backup_stale", pts, &Action{Kind: "show_machine", Target: m.ID},
+					"name", name, "machine", m.Name, "days", days(*g.LastBackup))
+			}
+		}
+		if len(missing) > 0 {
+			backupBad = true
+			pts := min(ptsNoBackup*len(missing), maxNoBackup-noBackup)
+			noBackup += pts
+			add("backup_missing", pts, &Action{Kind: "show_machine", Target: m.ID},
+				"machine", m.Name, "count", strconv.Itoa(len(missing)), "names", strings.Join(missing, ", "))
+		}
+		for _, b := range d.Backups {
+			sources++
+			switch {
+			case b.Failed:
+				backupBad = true
+				pts := min(ptsBackupFailed, maxBackupStale-stale)
+				stale += pts
+				add("backup_failed", pts, &Action{Kind: "show_machine", Target: m.ID}, "name", b.Name, "machine", m.Name)
+			case b.Last == nil:
+				backupBad = true
+				pts := min(ptsBackupStale, maxBackupStale-stale)
+				stale += pts
+				add("backup_empty", pts, &Action{Kind: "show_machine", Target: m.ID}, "name", b.Name, "machine", m.Name)
+			case now.Sub(*b.Last) > backupMaxAge:
+				backupBad = true
+				pts := min(ptsBackupStale, maxBackupStale-stale)
+				stale += pts
+				add("backup_stale", pts, &Action{Kind: "show_machine", Target: m.ID},
+					"name", b.Name, "machine", m.Name, "days", days(*b.Last))
+			}
+		}
+	}
+	switch {
+	case sources == 0 && len(in.Machines) > 0 && anyDiscovery(in.Machines):
+		add("backup_none", ptsBackupNone, nil)
+	case sources > 0 && !backupBad:
+		good = append(good, t.Get("health.good.backups", "count", strconv.Itoa(sources)))
+	}
+
 	// Published addresses that do not answer.
 	broken := 0
 	for _, p := range in.Publications {
@@ -283,6 +363,15 @@ func Compute(in Input, t i18n.T) Report {
 		good = []string{}
 	}
 	return Report{Score: score, Grade: grade, GradeText: t.Get("health.grade." + grade), Items: items, Good: good}
+}
+
+func anyDiscovery(ms []Machine) bool {
+	for _, m := range ms {
+		if m.Discovery != nil && m.Discovery.Available {
+			return true
+		}
+	}
+	return false
 }
 
 func countUp(cs []monitor.Check) int {

@@ -154,8 +154,8 @@ func TestHealthEndpoint(t *testing.T) {
 		GradeText string `json:"grade_text"`
 	}
 	json.Unmarshal(rec.Body.Bytes(), &out)
-	// No alerts (−15) and no outside watch (−10) in this test server.
-	if rec.Code != 200 || out.Score != 75 || out.GradeText != "Bra" {
+	// No alerts (−15), no outside watch (−10) and no backups (−5) in this test server.
+	if rec.Code != 200 || out.Score != 70 || out.GradeText != "Behöver lite tillsyn" {
 		t.Errorf("health = %d %s", rec.Code, rec.Body.String())
 	}
 }

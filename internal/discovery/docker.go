@@ -120,6 +120,25 @@ func (c *DockerClient) RestartPolicy(ctx context.Context, id string) (string, er
 	return name, nil
 }
 
+// LastRun says when a stopped container last finished and with which exit
+// code. Not cached: it changes every time the container runs.
+func (c *DockerClient) LastRun(ctx context.Context, id string) (time.Time, int, error) {
+	var info struct {
+		State struct {
+			FinishedAt time.Time `json:"FinishedAt"`
+			ExitCode   int       `json:"ExitCode"`
+		} `json:"State"`
+	}
+	if err := c.get(ctx, "/containers/"+url.PathEscape(id)+"/json", &info); err != nil {
+		return time.Time{}, 0, err
+	}
+	at := info.State.FinishedAt.UTC()
+	if at.Year() < 2000 { // Docker's "0001-01-01": never finished
+		at = time.Time{}
+	}
+	return at, info.State.ExitCode, nil
+}
+
 func (c *DockerClient) get(ctx context.Context, path string, v any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+path, nil)
 	if err != nil {

@@ -41,7 +41,9 @@ type Reader struct {
 	ConfDir string        // "" = /etc/pve
 	IPAge   time.Duration // how long an address is remembered; default 10 minutes
 	ListAge time.Duration // how long the guest list is reused; default 1 minute
-	Now     func() time.Time
+	// BackupAge is how long the list of backups is reused; default 10 minutes.
+	BackupAge time.Duration
+	Now       func() time.Time
 
 	mu       sync.Mutex
 	ips      map[string]ipEntry // "lxc/105" -> address, looked up now and then
@@ -49,6 +51,9 @@ type Reader struct {
 	listedAt time.Time
 	looking  bool           // addresses are being looked up in the background
 	lookups  sync.WaitGroup // for WaitLookups
+	backups  map[int]time.Time
+	backupOK bool
+	backupAt time.Time
 }
 
 // lookup is one address to find in the background.
@@ -148,6 +153,7 @@ func (r *Reader) Guests(ctx context.Context) ([]discovery.Guest, error) {
 	if err := r.get(ctx, "/cluster/resources", &rows, "--type", "vm"); err != nil {
 		return nil, err
 	}
+	backups, backupOK := r.backupTimes(ctx, node)
 	out := []discovery.Guest{}
 	var todo []lookup
 	for _, row := range rows {
@@ -174,6 +180,12 @@ func (r *Reader) Guests(ctx context.Context) ([]discovery.Guest, error) {
 		g.Tags = strings.FieldsFunc(row.Tags, func(c rune) bool { return c == ';' || c == ',' || c == ' ' })
 		conf := r.config(node, dir, id)
 		g.OnBoot = conf["onboot"] == "1"
+		if backupOK {
+			g.BackupChecked = true
+			if at, ok := backups[id]; ok {
+				g.LastBackup = &at
+			}
+		}
 		if g.Name == "" {
 			g.Name = conf["hostname"]
 		}
@@ -200,6 +212,60 @@ func (r *Reader) Guests(ctx context.Context) ([]discovery.Guest, error) {
 	}
 	r.mu.Unlock()
 	return append([]discovery.Guest(nil), out...), nil
+}
+
+// backupTimes finds the newest vzdump backup of each guest in this node's
+// storages that hold backups. ok is false when they could not be read.
+// Shared storages (a Proxmox Backup Server, NFS) show up here too.
+func (r *Reader) backupTimes(ctx context.Context, node string) (map[int]time.Time, bool) {
+	age := r.BackupAge
+	if age <= 0 {
+		age = 10 * time.Minute
+	}
+	r.mu.Lock()
+	if !r.backupAt.IsZero() && r.now().Sub(r.backupAt) < age {
+		m, ok := r.backups, r.backupOK
+		r.mu.Unlock()
+		return m, ok
+	}
+	r.mu.Unlock()
+
+	newest := map[int]time.Time{}
+	ok := true
+	var stores []struct {
+		Storage string `json:"storage"`
+		Active  int    `json:"active"`
+	}
+	if err := r.get(ctx, "/nodes/"+node+"/storage", &stores, "--content", "backup"); err != nil {
+		ok = false
+	}
+	for _, s := range stores {
+		if s.Active != 1 {
+			continue
+		}
+		var items []struct {
+			VMID  json.Number `json:"vmid"`
+			CTime int64       `json:"ctime"`
+		}
+		if err := r.get(ctx, "/nodes/"+node+"/storage/"+s.Storage+"/content", &items, "--content", "backup"); err != nil {
+			ok = false
+			continue
+		}
+		for _, it := range items {
+			id, err := strconv.Atoi(it.VMID.String())
+			if err != nil || it.CTime <= 0 {
+				continue
+			}
+			at := time.Unix(it.CTime, 0).UTC()
+			if at.After(newest[id]) {
+				newest[id] = at
+			}
+		}
+	}
+	r.mu.Lock()
+	r.backups, r.backupOK, r.backupAt = newest, ok, r.now()
+	r.mu.Unlock()
+	return newest, ok
 }
 
 // WaitLookups waits for background address lookups and makes the next

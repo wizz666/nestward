@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // KindGuest is a Proxmox virtual machine or container that Nestward does
@@ -26,6 +27,10 @@ type Guest struct {
 	OnBoot   bool     `json:"onboot"`              // starts with the machine
 	Tags     []string `json:"tags,omitempty"`
 	IP       string   `json:"ip,omitempty"` // its address on the home network, when known
+	// LastBackup is the newest vzdump backup Proxmox knows of; nil with
+	// BackupChecked true means there is none.
+	LastBackup    *time.Time `json:"last_backup,omitempty"`
+	BackupChecked bool       `json:"backup_checked,omitempty"`
 }
 
 // versionTail matches "16.3" in "haos16.3" or "-2" in "ubuntu-2".

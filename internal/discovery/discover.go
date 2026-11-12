@@ -91,6 +91,8 @@ type Result struct {
 	Stats     Stats     `json:"stats"`
 	// Boot is what starts by itself on this machine, when known.
 	Boot *Boot `json:"boot,omitempty"`
+	// Backups are the backup folders and backup containers found here.
+	Backups []Backup `json:"backups,omitempty"`
 }
 
 // Lister returns the containers to look at.
@@ -133,6 +135,7 @@ func Discover(ctx context.Context, cat *Catalog, newLister func() (Lister, error
 			}
 		}
 	}
+	containerBackups(ctx, l, &r)
 	return r
 }
 

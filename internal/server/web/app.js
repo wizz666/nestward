@@ -140,6 +140,10 @@
       body.appendChild(el("div", "svc-res", res));
     }
 
+    if (g && g.backup_checked && s.state === "running") {
+      if (!g.last_backup) body.appendChild(el("div", "svc-warn", t("ui.no_backup")));
+      else body.appendChild(el("div", "svc-res", fill(t("ui.backup_at"), { date: new Date(g.last_backup).toLocaleDateString(document.documentElement.lang || undefined) })));
+    }
     if (s.state === "running" && s.autostart === "no") {
       var na = el("div", "svc-warn", t("ui.no_autostart"));
       na.title = t("ui.no_autostart_hint");

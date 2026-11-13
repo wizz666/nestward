@@ -411,5 +411,21 @@
   "exp.extra_label": "Fler adresser att kontrollera",
   "exp.extra_help": "Adresser som inte är vägar i Cloudflare-tunneln, åtskilda med komma (till exempel vault.example.com).",
   "exp.save": "Spara",
-  "exp.saved": "Sparat. Tryck på Kontrollera nu för att ta med dem."
+  "exp.saved": "Sparat. Tryck på Kontrollera nu för att ta med dem.",
+  "health.restore_failed": "Provåterställningen av backupen för {name} på {machine} misslyckades ({date}).",
+  "health.restore_failed.fix": "Öppna maskinens kort och läs varför. Återställ backupen för hand i Proxmox till ett nytt ID och se om den startar. Om inte går backupen inte att lita på. Gör en ny backup direkt.",
+  "health.good.restored": "{count} backuper har återställts och startats i ett test den senaste månaden",
+  "ui.restore_ok": "Återställning testad {date} ✓",
+  "ui.restore_only": "Återställning testad {date} (inte startad: för lite ledigt minne)",
+  "ui.restore_failed": "Återställningstestet misslyckades {date}",
+  "ui.restore_skipped": "Återställningstestet hoppades över {date}",
+  "ui.restore_hint": "Nestward återställde backupen som en kopia utan nätverk, startade den, kontrollerade den och raderade den igen.",
+  "restore.stage.size": "backupen är större än gränsen",
+  "restore.stage.space": "det finns inte plats på disken för kopian",
+  "restore.stage.restore": "backupen gick inte att återställa",
+  "restore.stage.start": "kopian ville inte starta",
+  "restore.stage.check": "kopian startade men svarade aldrig",
+  "restore.stage.cleanup": "testkopian gick inte att radera; ta bort den i Proxmox (ID 9900–9999, taggen nestward-restore-test)",
+  "alert.restore_failed.title": "Backuptest misslyckades: {name}",
+  "alert.restore_failed.body": "Nestward försökte återställa den senaste backupen av {name} på {machine}, och {why}. Backupen kanske inte fungerar när du behöver den."
 }

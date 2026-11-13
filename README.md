@@ -113,6 +113,11 @@ the container again with the same command. Your data stays in the
   (borg, restic, Nextcloud AIO's borgbackup …) and extra folders named in
   `NESTWARD_BACKUP_PATHS`. Missing, failed or older than 8 days costs
   health points.
+- Restore test (Proxmox, opt-in): a backup is only proven when it has been
+  restored. Once a day the agent takes one guest's newest backup, restores
+  it as a temporary copy, starts it, checks that it comes up and deletes it
+  again, so each guest is tested about once a month. See
+  [Restore tests](#restore-tests).
 - Health score: one number from 0 to 100 for the home, with a plain list of
   what to do. Nestward only deducts for what it can see (alerts, outside
   watch, silent machines, services not working, full disks, low memory,
@@ -284,6 +289,38 @@ pvesh takes 1–3 seconds a call on small machines, so the list is read at
 most once a minute and addresses are looked up in the background every
 ten minutes. `NESTWARD_PROXMOX=off` turns it off.
 
+### Restore tests
+
+Start the Proxmox agent with `-restore-test` (or
+`NESTWARD_RESTORE_TEST=on`) and it proves the backups work. Every day at
+`-restore-hour` (default 6, after the night's backups; it waits for a
+running backup) it picks the guest that has waited longest (about once a
+month each) and:
+
+1. restores its newest vzdump backup with `pct restore` / `qmrestore
+   --unique` to a free ID between 9900 and 9999, on the guest's own storage;
+2. cuts the copy off before it starts: every network card, passed-through
+   device (PCI, USB, `/dev`), host folder (bind mount), raw `lxc.*` line,
+   hook script and autostart is removed, memory is capped at 2 GB
+   (containers) or 4 GB (VMs), and it gets the tag `nestward-restore-test`
+   and the name `nestward-test-ID`;
+3. starts it and waits for proof: the container's init answers through
+   `pct exec`, the VM's guest agent answers, or (no agent) the VM keeps
+   running for five minutes;
+4. stops and deletes it.
+
+It skips backups over 40 GB and storages without room, and restores
+without starting when the host is short of memory. Only guests carrying
+all three marks (ID range, tag, name) are ever stopped or deleted, and a
+copy left by a power cut is removed when the agent starts. The result
+shows on the guest's card ("Restore tested 2026-12-01 ✓"), a failure costs
+health points and sends one alert. To test a guest right away:
+
+```sh
+nestward restore-test --data /var/lib/nestward-agent --list
+nestward restore-test --data /var/lib/nestward-agent --vmid 150
+```
+
 ## API
 
 | Path | What |
@@ -375,6 +412,8 @@ tjänsterna fungerar, och larm skickas till mobilen via ntfy om något slutar
 fungera. En vakt utanför huset larmar om hela hemmet blir tyst.
 Den kontrollerar också att allt som körs startar av sig självt efter ett strömavbrott.
 Och att det finns färska backuper: Proxmox, Unraids backuptillägg och backupcontainrar.
+På Proxmox kan den också bevisa att backuperna går att använda: en gång om dagen
+återställs en backup som en tillfällig kopia utan nätverk, startas, kontrolleras och raderas.
 Webbsidan kräver inloggning med lösenord och tvåstegskod, och tjänster kan
 publiceras på den egna domänen med ett klick, med inloggning framför och en
 ångra-knapp.

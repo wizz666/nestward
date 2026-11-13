@@ -31,7 +31,36 @@ type Guest struct {
 	// BackupChecked true means there is none.
 	LastBackup    *time.Time `json:"last_backup,omitempty"`
 	BackupChecked bool       `json:"backup_checked,omitempty"`
+	// RestoreTest is the latest test restore of this guest's backup, when
+	// the agent runs restore tests.
+	RestoreTest *RestoreTest `json:"restore_test,omitempty"`
 }
+
+// RestoreTest is the outcome of restoring a guest's newest backup into a
+// temporary copy without network, starting it and removing it again.
+type RestoreTest struct {
+	TestedAt time.Time `json:"tested_at"`
+	Backup   time.Time `json:"backup"`  // when the tested backup was made
+	Archive  string    `json:"archive"` // backup file name
+	// Result is "ok", "failed" or "skipped".
+	Result string `json:"result"`
+	// Stage says where it stopped: space, memory, size, restore, start,
+	// check, cleanup. Empty when all went well.
+	Stage string `json:"stage,omitempty"`
+	// Proof says how the copy proved it works: "agent" (the guest agent
+	// answered), "init" (the container's system runs), "running" (the VM
+	// kept running), or "restored" (restored only, not started).
+	Proof   string `json:"proof,omitempty"`
+	Detail  string `json:"detail,omitempty"`
+	Seconds int    `json:"seconds"`
+}
+
+// Restore test results.
+const (
+	RestoreOK      = "ok"
+	RestoreFailed  = "failed"
+	RestoreSkipped = "skipped"
+)
 
 // versionTail matches "16.3" in "haos16.3" or "-2" in "ubuntu-2".
 var versionTail = regexp.MustCompile(`[-_.]?[0-9][0-9.]*$`)

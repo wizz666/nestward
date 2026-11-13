@@ -160,6 +160,9 @@ func (r *Reader) Guests(ctx context.Context) ([]discovery.Guest, error) {
 		if row.Node != node || row.Template.String() == "1" {
 			continue
 		}
+		if strings.Contains(";"+row.Tags+";", ";nestward-restore-test;") {
+			continue // a short-lived restore test copy, not a real guest
+		}
 		typ, dir := "vm", "qemu-server"
 		if row.Type == "lxc" {
 			typ, dir = "ct", "lxc"

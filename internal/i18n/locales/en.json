@@ -411,5 +411,21 @@
   "exp.extra_label": "Extra addresses to check",
   "exp.extra_help": "Addresses that are not Cloudflare Tunnel routes, comma separated (for example vault.example.com).",
   "exp.save": "Save",
-  "exp.saved": "Saved. Check now to include them."
+  "exp.saved": "Saved. Check now to include them.",
+  "health.restore_failed": "The test restore of {name}'s backup on {machine} failed ({date}).",
+  "health.restore_failed.fix": "Open the machine card and read why. Restore the backup by hand in Proxmox to a new ID and see if it starts; if not, the backup cannot be trusted. Make a new backup right away.",
+  "health.good.restored": "{count} backups were restored and started in a test the last month",
+  "ui.restore_ok": "Restore tested {date} ✓",
+  "ui.restore_only": "Restore tested {date} (not started: too little free memory)",
+  "ui.restore_failed": "Restore test failed {date}",
+  "ui.restore_skipped": "Restore test skipped {date}",
+  "ui.restore_hint": "Nestward restored this backup as a copy without network, started it, checked it and deleted it again.",
+  "restore.stage.size": "the backup is bigger than the limit",
+  "restore.stage.space": "not enough free disk space for the copy",
+  "restore.stage.restore": "the backup could not be restored",
+  "restore.stage.start": "the copy would not start",
+  "restore.stage.check": "the copy started but never answered",
+  "restore.stage.cleanup": "the test copy could not be deleted; remove it in Proxmox (ID 9900–9999, tag nestward-restore-test)",
+  "alert.restore_failed.title": "Backup test failed: {name}",
+  "alert.restore_failed.body": "Nestward tried to restore the newest backup of {name} on {machine}, and {why}. The backup may not work when you need it."
 }

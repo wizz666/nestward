@@ -209,6 +209,7 @@ func (s *Server) handleAgentReport(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal"})
 		return
 	}
+	go s.alertRestoreTests(context.Background(), machineID, p.Hardware.Hostname, p.Discovery)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "saved"})
 }
 

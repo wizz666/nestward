@@ -96,6 +96,9 @@ const (
 	maxBackupStale      = 12
 	ptsBackupNone       = 5 // no backups found anywhere
 	backupMaxAge        = 8 * 24 * time.Hour
+	ptsRestoreFailed    = 5 // a test restore of a backup failed
+	maxRestoreFailed    = 10
+	restoreMaxAge       = 45 * 24 * time.Hour // older test results do not count
 )
 
 // Compute works out the score.
@@ -233,6 +236,7 @@ func Compute(in Input, t i18n.T) Report {
 	}
 	days := func(at time.Time) string { return strconv.Itoa(int(now.Sub(at).Hours() / 24)) }
 	sources, backupBad, noBackup, stale := 0, false, 0, 0
+	restoredOK, restoreBad := 0, 0
 	for _, m := range in.Machines {
 		d := m.Discovery
 		if d == nil || !d.Available {
@@ -241,6 +245,21 @@ func Compute(in Input, t i18n.T) Report {
 		var missing []string
 		for _, s := range d.Services {
 			g := s.Guest
+			if g != nil && g.RestoreTest != nil && now.Sub(g.RestoreTest.TestedAt) < restoreMaxAge {
+				name := g.Name
+				if name == "" {
+					name = s.Name
+				}
+				switch g.RestoreTest.Result {
+				case discovery.RestoreOK:
+					restoredOK++
+				case discovery.RestoreFailed:
+					pts := min(ptsRestoreFailed, maxRestoreFailed-restoreBad)
+					restoreBad += pts
+					add("restore_failed", pts, &Action{Kind: "show_machine", Target: m.ID},
+						"name", name, "machine", m.Name, "date", g.RestoreTest.TestedAt.Local().Format("2006-01-02"))
+				}
+			}
 			if g == nil || !g.BackupChecked || s.State != "running" {
 				continue
 			}
@@ -294,6 +313,9 @@ func Compute(in Input, t i18n.T) Report {
 		add("backup_none", ptsBackupNone, nil)
 	case sources > 0 && !backupBad:
 		good = append(good, t.Get("health.good.backups", "count", strconv.Itoa(sources)))
+	}
+	if restoredOK > 0 && restoreBad == 0 {
+		good = append(good, t.Get("health.good.restored", "count", strconv.Itoa(restoredOK)))
 	}
 
 	// Published addresses that do not answer.

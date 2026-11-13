@@ -43,6 +43,7 @@ import (
 	"github.com/wizz666/nestward/internal/pki"
 	"github.com/wizz666/nestward/internal/proxmox"
 	"github.com/wizz666/nestward/internal/publish"
+	"github.com/wizz666/nestward/internal/restoretest"
 	"github.com/wizz666/nestward/internal/secrets"
 	"github.com/wizz666/nestward/internal/server"
 	"github.com/wizz666/nestward/internal/store"
@@ -56,7 +57,8 @@ const usage = `Nestward – an ops layer for the home server you already have.
 
 Usage:
   nestward serve   [--addr 127.0.0.1:8470] [--data ./data]
-  nestward agent   [--data ./agent-data] [--core https://core:8472 --code CODE --fingerprint sha256:…] [--once]
+  nestward agent   [--data ./agent-data] [--core https://core:8472 --code CODE --fingerprint sha256:…] [--once] [--restore-test [--restore-hour 6]]
+  nestward restore-test [--data ./agent-data] [--list | --vmid N]   Proxmox: prove a guest's backup restores and starts
   nestward report  [--lang en|sv] [--json]
   nestward discover [--json] [--from FILE]
   nestward config  [--data ./data] list | get NAME | set NAME VALUE
@@ -99,6 +101,8 @@ func main() {
 		err = testAlert(ctx, os.Args[2:], os.Stdout)
 	case "watchdog":
 		err = runWatchdog(ctx, os.Args[2:])
+	case "restore-test":
+		err = runRestoreTest(ctx, os.Args[2:])
 	case "agent-code":
 		err = agentCode(ctx, os.Args[2:], os.Stdout)
 	case "reset-login":
@@ -151,9 +155,16 @@ func discoverer() (func(context.Context) discovery.Result, error) {
 		}
 		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 		discovery.ReadBackups(os.Getenv("NESTWARD_HOST_ROOT"), backupPaths(), &r)
+		if restoreTester != nil {
+			restoreTester.Attach(&r)
+		}
 		return r
 	}, nil
 }
+
+// restoreTester runs restore tests on a Proxmox host when the agent is
+// started with -restore-test; nil otherwise.
+var restoreTester *restoretest.Tester
 
 // backupPaths are extra backup folders to watch (host paths, comma
 // separated), for tools Nestward does not find by itself.
@@ -386,6 +397,9 @@ func runAgent(ctx context.Context, args []string) error {
 	fingerprint := fs.String("fingerprint", "", "the core's fingerprint from the same command")
 	interval := fs.Duration("interval", 30*time.Second, "time between reports (the core calls a machine silent after 2 minutes)")
 	once := fs.Bool("once", false, "send one report and exit")
+	restore := fs.Bool("restore-test", env("NESTWARD_RESTORE_TEST", "") == "on",
+		"Proxmox only: once a day restore one guest's newest backup as a temporary copy without network, start it, check it and delete it")
+	restoreHour := fs.Int("restore-hour", 6, "hour of the day (0-23) for the restore test, after the night's backups")
 	fs.Parse(args)
 	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
@@ -425,6 +439,11 @@ func runAgent(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
+	if *restore && proxmox.Available() && !*once {
+		restoreTester = &restoretest.Tester{DataDir: *data, Log: log}
+		go restoreTester.Loop(ctx, *restoreHour)
+		log.Info("restore tests on", "hour", *restoreHour)
+	}
 	disc, err := discoverer()
 	if err != nil {
 		return err
@@ -451,6 +470,49 @@ func runAgent(ctx context.Context, args []string) error {
 		return quiet()
 	}
 	return err
+}
+
+// runRestoreTest tests one guest's backup now (on a Proxmox host).
+func runRestoreTest(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("restore-test", flag.ExitOnError)
+	data := fs.String("data", env("NESTWARD_DATA", "agent-data"), "the agent's data folder, where results are kept")
+	vmid := fs.Int("vmid", 0, "the guest to test")
+	list := fs.Bool("list", false, "only list the guests with a backup, and when each was tested")
+	fs.Parse(args)
+	if !proxmox.Available() {
+		return errors.New("restore-test: this is not a Proxmox VE host")
+	}
+	t := &restoretest.Tester{DataDir: *data, Log: slog.New(slog.NewTextHandler(os.Stderr, nil))}
+	if *list || *vmid == 0 {
+		cands, err := t.Candidates(ctx)
+		if err != nil {
+			return err
+		}
+		res := t.Results()
+		for _, c := range cands {
+			last := "never tested"
+			if r, ok := res[c.VMID]; ok {
+				last = r.TestedAt.Local().Format("2006-01-02 15:04") + " " + r.Result
+			}
+			fmt.Printf("%-3s %-5d %-24s backup %s  %6d MB  %s\n", c.Type, c.VMID, c.Name,
+				c.Backup.Local().Format("2006-01-02 15:04"), c.Size>>20, last)
+		}
+		if *vmid == 0 && !*list {
+			fmt.Println("\nPick one with -vmid N.")
+		}
+		return nil
+	}
+	t.CleanLeftovers(ctx)
+	r, err := t.TestOne(ctx, *vmid)
+	if err != nil {
+		return err
+	}
+	out, _ := json.MarshalIndent(r, "", "  ")
+	fmt.Println(string(out))
+	if r.Result == "failed" {
+		os.Exit(1)
+	}
+	return nil
 }
 
 func report(ctx context.Context, args []string, w io.Writer) error {

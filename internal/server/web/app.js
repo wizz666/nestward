@@ -144,6 +144,15 @@
       if (!g.last_backup) body.appendChild(el("div", "svc-warn", t("ui.no_backup")));
       else body.appendChild(el("div", "svc-res", fill(t("ui.backup_at"), { date: new Date(g.last_backup).toLocaleDateString(document.documentElement.lang || undefined) })));
     }
+    var rt = g && g.restore_test;
+    if (rt) {
+      var rdate = new Date(rt.tested_at).toLocaleDateString(document.documentElement.lang || undefined);
+      var rkey = rt.result === "ok" ? (rt.proof === "restored" ? "ui.restore_only" : "ui.restore_ok")
+        : rt.result === "failed" ? "ui.restore_failed" : "ui.restore_skipped";
+      var rl = el("div", rt.result === "failed" ? "svc-warn" : "svc-res", fill(t(rkey), { date: rdate }));
+      rl.title = rt.stage ? t("restore.stage." + rt.stage) + (rt.detail ? " — " + rt.detail : "") : t("ui.restore_hint");
+      body.appendChild(rl);
+    }
     if (s.state === "running" && s.autostart === "no") {
       var na = el("div", "svc-warn", t("ui.no_autostart"));
       na.title = t("ui.no_autostart_hint");

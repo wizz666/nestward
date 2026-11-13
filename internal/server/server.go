@@ -85,6 +85,7 @@ func (s *Server) Handler() http.Handler {
 	s.registerAgents(mux)
 	s.registerPublish(mux)
 	s.registerExposure(mux)
+	s.registerTravel(mux)
 	return securityHeaders(s.guard(mux))
 }
 

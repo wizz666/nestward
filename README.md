@@ -118,6 +118,13 @@ the container again with the same command. Your data stays in the
   it as a temporary copy, starts it, checks that it comes up and deletes it
   again, so each guest is tested about once a month. See
   [Restore tests](#restore-tests).
+- Travel mode: a check before leaving home – alerts, outside watch,
+  machines reporting, autostart after a power cut, fresh and test-restored
+  backups, disk room, nothing open on the internet, and a tick per physical
+  machine for the BIOS "power on after power loss" setting (which no
+  program can see). While away, one short message a day ("Home: all
+  fine"), so a quiet phone means something; it turns itself off the day
+  after you are back.
 - Health score: one number from 0 to 100 for the home, with a plain list of
   what to do. Nestward only deducts for what it can see (alerts, outside
   watch, silent machines, services not working, full disks, low memory,
@@ -412,6 +419,8 @@ tjänsterna fungerar, och larm skickas till mobilen via ntfy om något slutar
 fungera. En vakt utanför huset larmar om hela hemmet blir tyst.
 Den kontrollerar också att allt som körs startar av sig självt efter ett strömavbrott.
 Och att det finns färska backuper: Proxmox, Unraids backuptillägg och backupcontainrar.
+Ett reseläge går igenom allt som måste fungera när ingen är hemma, och skickar
+ett kort "allt är bra"-meddelande varje dag medan du är borta.
 På Proxmox kan den också bevisa att backuperna går att använda: en gång om dagen
 återställs en backup som en tillfällig kopia utan nätverk, startas, kontrolleras och raderas.
 Webbsidan kräver inloggning med lösenord och tvåstegskod, och tjänster kan

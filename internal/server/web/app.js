@@ -425,6 +425,7 @@
       renderAlerts(st, res[2] || []);
       if (NW.renderPublications) NW.renderPublications(res[3]);
       if (NW.renderExposure) NW.renderExposure(res[6]);
+      if (NW.loadTravel) NW.loadTravel();
       var frag = document.createDocumentFragment();
       res[0].forEach(function (m) { frag.appendChild(renderMachine(m)); });
       main.replaceChildren(frag);

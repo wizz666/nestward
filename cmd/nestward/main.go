@@ -338,6 +338,7 @@ func serve(ctx context.Context, args []string) error {
 		Notifier: alerter, Log: log, CloudflareBase: os.Getenv("NESTWARD_CLOUDFLARE_API")}
 	go srv.Exposure.Run(ctx, 2*time.Minute, 6*time.Hour)
 	go heartbeat.Run(ctx, time.Minute)
+	go srv.RunTravel(ctx)
 
 	// The encrypted agent port, with Nestward's own certificate authority.
 	var agentSrv *http.Server

@@ -299,3 +299,13 @@ footer a { color: var(--brand); }
 .xp-more summary { cursor: pointer; color: var(--brand); }
 .xp-extra { margin-top: 8px; }
 .ok-text { color: var(--ok); }
+
+/* Travel mode */
+.tv-list { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; gap: 8px; }
+.tv { border-left: 4px solid var(--line); padding: 6px 12px; }
+.tv.v-ok { border-left-color: var(--ok); }
+.tv.v-slow { border-left-color: var(--slow); }
+.tv.v-no { border-left-color: var(--no); }
+.tv .pub-head { display: flex; gap: 10px; align-items: center; }
+.tv-bios { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.tv-verdict { margin: 4px 0 8px; }

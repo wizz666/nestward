@@ -43,6 +43,8 @@ type Report struct {
 	GradeText string   `json:"grade_text"`
 	Items     []Item   `json:"items"`
 	Good      []string `json:"good"` // short list of what is fine, so the page is not only bad news
+	// Restored counts guests whose backup passed a test restore lately.
+	Restored int `json:"restored"`
 }
 
 // Machine is one machine's hardware for the disk and memory checks.
@@ -99,6 +101,8 @@ const (
 	ptsRestoreFailed    = 5 // a test restore of a backup failed
 	maxRestoreFailed    = 10
 	restoreMaxAge       = 45 * 24 * time.Hour // older test results do not count
+	ptsGuestDiskFull    = 3                   // a Proxmox container's own disk is 90 % full or more
+	maxGuestDiskFull    = 9
 )
 
 // Compute works out the score.
@@ -197,6 +201,31 @@ func Compute(in Input, t i18n.T) Report {
 		if mem.TotalBytes > 0 && mem.AvailableBytes*10 < mem.TotalBytes {
 			add("memory_low", ptsMemoryLow, &Action{Kind: "show_machine", Target: m.ID},
 				"machine", m.Name, "free", t.GB(mem.AvailableBytes), "total", t.GB(mem.TotalBytes))
+		}
+	}
+	guestFull := 0
+	for _, m := range in.Machines {
+		if m.Discovery == nil {
+			continue
+		}
+		for _, sv := range m.Discovery.Services {
+			g := sv.Guest
+			if g == nil || g.DiskMax <= 0 || g.DiskUsed <= 0 || sv.State != "running" {
+				continue
+			}
+			used := int(g.DiskUsed * 100 / g.DiskMax)
+			if used < 90 {
+				continue
+			}
+			diskOK = false
+			name := g.Name
+			if name == "" {
+				name = sv.Name
+			}
+			pts := min(ptsGuestDiskFull, maxGuestDiskFull-guestFull)
+			guestFull += pts
+			add("guest_disk_full", pts, &Action{Kind: "show_machine", Target: m.ID},
+				"name", name, "machine", m.Name, "percent", strconv.Itoa(used), "free", t.GB(uint64(g.DiskMax-g.DiskUsed)))
 		}
 	}
 	if diskOK && len(in.Machines) > 0 {
@@ -384,7 +413,7 @@ func Compute(in Input, t i18n.T) Report {
 	if good == nil {
 		good = []string{}
 	}
-	return Report{Score: score, Grade: grade, GradeText: t.Get("health.grade." + grade), Items: items, Good: good}
+	return Report{Score: score, Grade: grade, GradeText: t.Get("health.grade." + grade), Items: items, Good: good, Restored: restoredOK}
 }
 
 func anyDiscovery(ms []Machine) bool {

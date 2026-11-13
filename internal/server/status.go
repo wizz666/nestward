@@ -153,12 +153,20 @@ func (s *Server) handleTestAlert(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	in := health.Input{}
-	ms, err := s.MonitorMachines(ctx)
+	in, err := s.healthInput(r.Context())
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal"})
 		return
+	}
+	writeJSON(w, http.StatusOK, health.Compute(in, s.lang(r)))
+}
+
+// healthInput gathers everything the health score is based on.
+func (s *Server) healthInput(ctx context.Context) (health.Input, error) {
+	in := health.Input{}
+	ms, err := s.MonitorMachines(ctx)
+	if err != nil {
+		return in, err
 	}
 	local := s.Local(ctx).Hardware
 	for _, m := range ms {
@@ -190,5 +198,5 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 			in.Exposure = r.Findings
 		}
 	}
-	writeJSON(w, http.StatusOK, health.Compute(in, s.lang(r)))
+	return in, nil
 }

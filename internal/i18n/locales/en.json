@@ -414,6 +414,8 @@
   "exp.saved": "Saved. Check now to include them.",
   "health.restore_failed": "The test restore of {name}'s backup on {machine} failed ({date}).",
   "health.restore_failed.fix": "Open the machine card and read why. Restore the backup by hand in Proxmox to a new ID and see if it starts; if not, the backup cannot be trusted. Make a new backup right away.",
+  "health.restore_failed_wizzos": "WizzOS test restore of {name} on {machine} failed ({date}).",
+  "health.restore_failed_wizzos.fix": "Open WizzOS → Backup and run the test restore again, or ask its AI help why. Make a new backup right away.",
   "health.good.restored": "{count} backups were restored and started in a test the last month",
   "ui.restore_ok": "Restore tested {date} ✓",
   "ui.restore_only": "Restore tested {date} (not started: too little free memory)",

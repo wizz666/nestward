@@ -155,6 +155,7 @@ func discoverer() (func(context.Context) discovery.Result, error) {
 		}
 		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 		discovery.ReadBackups(os.Getenv("NESTWARD_HOST_ROOT"), backupPaths(), &r)
+		discovery.ReadWizzOS(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 		if restoreTester != nil {
 			restoreTester.Attach(&r)
 		}
@@ -202,6 +203,7 @@ func discover(ctx context.Context, args []string, w io.Writer) error {
 	if *from == "" {
 		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 		discovery.ReadBackups(os.Getenv("NESTWARD_HOST_ROOT"), backupPaths(), &r)
+		discovery.ReadWizzOS(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 	}
 	if *asJSON {
 		enc := json.NewEncoder(w)

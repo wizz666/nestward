@@ -125,6 +125,15 @@ the container again with the same command. Your data stays in the
   program can see). While away, one short message a day ("Home: all
   fine"), so a quiet phone means something; it turns itself off the day
   after you are back.
+- WizzOS: when an agent runs on a machine with the WizzOS app panel, it
+  reads WizzOS's status file (`/DATA/WizzOS/status.json`). WizzOS apps get
+  their real names, WizzOS's nightly backup and test restore count in the
+  backup check, and apps on trial or stopped on purpose never alert.
+- Share key: set `share.token` (`nestward config set share.token …`, at
+  least 24 characters) and another program can read the health summary –
+  score, top things to fix, checks up and down, nothing else – at
+  `GET /api/v1/share/summary` with `Authorization: Bearer <key>`. WizzOS
+  uses it to show the home's score on its start page.
 - Health score: one number from 0 to 100 for the home, with a plain list of
   what to do. Nestward only deducts for what it can see (alerts, outside
   watch, silent machines, services not working, full disks, low memory,

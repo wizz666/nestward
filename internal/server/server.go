@@ -86,6 +86,7 @@ func (s *Server) Handler() http.Handler {
 	s.registerPublish(mux)
 	s.registerExposure(mux)
 	s.registerTravel(mux)
+	mux.HandleFunc("GET /api/v1/share/summary", s.handleShareSummary)
 	return securityHeaders(s.guard(mux))
 }
 

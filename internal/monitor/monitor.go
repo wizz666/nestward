@@ -258,13 +258,17 @@ func (m *Monitor) RunOnce(ctx context.Context) ([]Event, error) {
 		}
 		for _, s := range d.Services {
 			c := get("container/"+mc.ID+"/"+s.Name, KindContainer, mc, s)
-			if s.Finished {
+			if s.Finished || (s.Quiet && s.State != "running") {
 				// Ran to the end on its own (backup jobs and the like) or was
 				// stopped on purpose: not an outage, and no alert.
 				if c.Status != Stopped {
 					c.Status, c.Since = Stopped, now
 				}
-				c.Checked, c.Fails, c.FailSince, c.Detail = now, 0, time.Time{}, "exited (0)"
+				detail := "exited (0)"
+				if !s.Finished {
+					detail = "stopped on purpose"
+				}
+				c.Checked, c.Fails, c.FailSince, c.Detail = now, 0, time.Time{}, detail
 				continue
 			}
 			up := s.State == "running" && s.Health != "unhealthy"
@@ -278,7 +282,7 @@ func (m *Monitor) RunOnce(ctx context.Context) ([]Event, error) {
 			// Nestward's own page is often published on 127.0.0.1 only and
 			// cannot be reached from inside its container; it is up anyway
 			// if this code runs.
-			if s.Web == nil || s.Kind == discovery.KindSupport || s.AppID == "nestward" {
+			if s.Web == nil || s.Kind == discovery.KindSupport || s.AppID == "nestward" || s.Quiet {
 				continue
 			}
 			wc := get("web/"+mc.ID+"/"+s.Name, KindWeb, mc, s)

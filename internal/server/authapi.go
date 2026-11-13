@@ -23,6 +23,8 @@ func public(r *http.Request) bool {
 		return true // the page itself, its script and styles
 	case p == "/api/v1/i18n", strings.HasPrefix(p, "/api/v1/auth/"):
 		return true
+	case p == "/api/v1/share/summary":
+		return true // checks its own read-only key
 	}
 	return false
 }

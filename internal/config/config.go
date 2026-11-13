@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/wizz666/nestward/internal/secrets"
 	"github.com/wizz666/nestward/internal/store"
@@ -39,6 +40,7 @@ const (
 	TailscaleAuthKey  = "tailscale.authkey"
 	TailscaleAPIKey   = "tailscale.apikey"
 	ExposureHosts     = "exposure.hosts"
+	ShareToken        = "share.token"
 )
 
 func httpURL(v string) error {
@@ -67,6 +69,13 @@ func topic(v string) error {
 	return nil
 }
 
+func shareToken(v string) error {
+	if len(v) < 24 || strings.ContainsFunc(v, unicode.IsSpace) {
+		return fmt.Errorf("must be at least 24 characters without spaces")
+	}
+	return nil
+}
+
 func host(v string) error {
 	if v == "" || strings.ContainsAny(v, "/ ") {
 		return fmt.Errorf("must be a host name or IP address")
@@ -88,6 +97,7 @@ var Keys = []Key{
 	{Name: PublishEmails, Validate: emails, Help: "e-mail addresses allowed through the login in front of published apps (comma separated)"},
 	{Name: TailscaleAuthKey, Secret: true, Validate: tsKey, Help: "Tailscale auth key (reusable) for publishing inside your tailnet"},
 	{Name: TailscaleAPIKey, Secret: true, Validate: tsAPIKey, Help: "optional Tailscale API access token: undo then deletes the device from the tailnet"},
+	{Name: ShareToken, Secret: true, Validate: shareToken, Help: "read-only key that lets another program (such as WizzOS) read the health summary at /api/v1/share/summary; empty turns it off"},
 	{Name: ExposureHosts, Validate: hostList, Help: "extra public addresses to check from the outside (comma separated), besides the Cloudflare Tunnel routes"},
 }
 

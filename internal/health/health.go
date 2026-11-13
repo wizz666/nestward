@@ -317,6 +317,24 @@ func Compute(in Input, t i18n.T) Report {
 		}
 		for _, b := range d.Backups {
 			sources++
+			if b.Tested != nil && now.Sub(*b.Tested) < restoreMaxAge {
+				if b.TestOK {
+					restoredOK++
+				} else {
+					pts := min(ptsRestoreFailed, maxRestoreFailed-restoreBad)
+					restoreBad += pts
+					name := b.Name
+					if b.TestedApp != "" {
+						name = b.TestedApp
+					}
+					key := "restore_failed"
+					if b.Kind == "wizzos" {
+						key = "restore_failed_wizzos"
+					}
+					add(key, pts, &Action{Kind: "show_machine", Target: m.ID},
+						"name", name, "machine", m.Name, "date", b.Tested.Local().Format("2006-01-02"))
+				}
+			}
 			switch {
 			case b.Failed:
 				backupBad = true

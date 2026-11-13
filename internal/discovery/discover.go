@@ -64,6 +64,11 @@ type Service struct {
 	// the machine starts again after a power cut: "yes", "no", or empty
 	// when Nestward cannot tell.
 	Autostart string `json:"autostart,omitempty"`
+	// WizzOS is the WizzOS app name when WizzOS installed this container.
+	WizzOS string `json:"wizzos,omitempty"`
+	// Quiet is set when the panel that runs the app says it is on trial or
+	// stopped on purpose: it is not checked and never alerts.
+	Quiet bool `json:"quiet,omitempty"`
 }
 
 // Stats counts what was recognised.
@@ -93,6 +98,8 @@ type Result struct {
 	Boot *Boot `json:"boot,omitempty"`
 	// Backups are the backup folders and backup containers found here.
 	Backups []Backup `json:"backups,omitempty"`
+	// WizzOS is set when a WizzOS panel runs on this machine.
+	WizzOS *WizzOS `json:"wizzos,omitempty"`
 }
 
 // Lister returns the containers to look at.
@@ -221,7 +228,9 @@ func toService(c Container, cat *Catalog) Service {
 	if s.Kind != KindSupport {
 		s.Web = webLink(c, s.Ports, sig, ok)
 	}
-	if p := c.Labels["com.docker.compose.project"]; p != "" {
+	if a := c.Labels["wizzos.app"]; a != "" {
+		s.Group, s.WizzOS = a, a
+	} else if p := c.Labels["com.docker.compose.project"]; p != "" {
 		s.Group = p
 	} else if n := c.HostConfig.NetworkMode; n != "" && !sharedNetwork(n) {
 		s.Group = n

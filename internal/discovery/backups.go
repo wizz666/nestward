@@ -18,7 +18,7 @@ import (
 // Backup is one place where backups land, and when the newest one was
 // made. Proxmox guests carry their own backup time (Guest.LastBackup).
 type Backup struct {
-	Kind string `json:"kind"` // "folder" or "container"
+	Kind string `json:"kind"` // "folder", "container" or "wizzos"
 	Name string `json:"name"` // what to call it in the page, such as "Easy Backup: appdata"
 	Path string `json:"path,omitempty"`
 	// Last is when the newest backup was made; nil when none was found.
@@ -27,6 +27,11 @@ type Backup struct {
 	// that exited with an error).
 	Failed bool   `json:"failed,omitempty"`
 	Detail string `json:"detail,omitempty"`
+	// Tested is when a backup was last restored as a test (WizzOS does
+	// this every night); TestOK says whether it worked.
+	Tested    *time.Time `json:"tested,omitempty"`
+	TestOK    bool       `json:"test_ok,omitempty"`
+	TestedApp string     `json:"tested_app,omitempty"`
 }
 
 // backupImage matches containers that make backups and then exit, such

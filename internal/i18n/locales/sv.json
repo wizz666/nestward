@@ -414,6 +414,8 @@
   "exp.saved": "Sparat. Tryck på Kontrollera nu för att ta med dem.",
   "health.restore_failed": "Provåterställningen av backupen för {name} på {machine} misslyckades ({date}).",
   "health.restore_failed.fix": "Öppna maskinens kort och läs varför. Återställ backupen för hand i Proxmox till ett nytt ID och se om den startar. Om inte går backupen inte att lita på. Gör en ny backup direkt.",
+  "health.restore_failed_wizzos": "WizzOS provåterställning av {name} på {machine} misslyckades ({date}).",
+  "health.restore_failed_wizzos.fix": "Öppna WizzOS → Backup och tryck på Fråga AI vid appen, eller kör Testa återställning nu igen. Gör en ny backup direkt.",
   "health.good.restored": "{count} backuper har återställts och startats i ett test den senaste månaden",
   "ui.restore_ok": "Återställning testad {date} ✓",
   "ui.restore_only": "Återställning testad {date} (inte startad: för lite ledigt minne)",

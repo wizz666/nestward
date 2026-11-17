@@ -100,6 +100,17 @@ type Result struct {
 	Backups []Backup `json:"backups,omitempty"`
 	// WizzOS is set when a WizzOS panel runs on this machine.
 	WizzOS *WizzOS `json:"wizzos,omitempty"`
+	// Storage is where a Proxmox host keeps its guests' disks (local-lvm and
+	// the like); empty elsewhere.
+	Storage []Storage `json:"storage,omitempty"`
+}
+
+// Storage is one place a Proxmox host can put virtual disks.
+type Storage struct {
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	TotalBytes uint64 `json:"total_bytes"`
+	FreeBytes  uint64 `json:"free_bytes"`
 }
 
 // Lister returns the containers to look at.

@@ -45,15 +45,60 @@ type Reader struct {
 	BackupAge time.Duration
 	Now       func() time.Time
 
-	mu       sync.Mutex
-	ips      map[string]ipEntry // "lxc/105" -> address, looked up now and then
-	list     []discovery.Guest
-	listedAt time.Time
-	looking  bool           // addresses are being looked up in the background
-	lookups  sync.WaitGroup // for WaitLookups
-	backups  map[int]time.Time
-	backupOK bool
-	backupAt time.Time
+	mu        sync.Mutex
+	ips       map[string]ipEntry // "lxc/105" -> address, looked up now and then
+	list      []discovery.Guest
+	listedAt  time.Time
+	looking   bool           // addresses are being looked up in the background
+	lookups   sync.WaitGroup // for WaitLookups
+	backups   map[int]time.Time
+	backupOK  bool
+	backupAt  time.Time
+	storage   []discovery.Storage
+	storageAt time.Time
+}
+
+// Storage lists the active, local places this node keeps guest disks
+// (images or rootdir). Shared network storage (CIFS/NFS/PBS) is left out:
+// it is not this machine's own room. Reused for five minutes.
+func (r *Reader) Storage(ctx context.Context) ([]discovery.Storage, error) {
+	r.mu.Lock()
+	if !r.storageAt.IsZero() && r.now().Sub(r.storageAt) < 5*time.Minute {
+		out := r.storage
+		r.mu.Unlock()
+		return out, nil
+	}
+	r.mu.Unlock()
+	node, err := r.node()
+	if err != nil {
+		return nil, err
+	}
+	var stores []struct {
+		Storage string `json:"storage"`
+		Type    string `json:"type"`
+		Content string `json:"content"`
+		Active  int    `json:"active"`
+		Shared  int    `json:"shared"`
+		Total   uint64 `json:"total"`
+		Avail   uint64 `json:"avail"`
+	}
+	if err := r.get(ctx, "/nodes/"+node+"/storage", &stores); err != nil {
+		return nil, err
+	}
+	out := []discovery.Storage{}
+	for _, st := range stores {
+		if st.Active != 1 || st.Shared == 1 || st.Total == 0 {
+			continue
+		}
+		if !strings.Contains(st.Content, "images") && !strings.Contains(st.Content, "rootdir") {
+			continue
+		}
+		out = append(out, discovery.Storage{Name: st.Storage, Type: st.Type, TotalBytes: st.Total, FreeBytes: st.Avail})
+	}
+	r.mu.Lock()
+	r.storage, r.storageAt = out, r.now()
+	r.mu.Unlock()
+	return out, nil
 }
 
 // lookup is one address to find in the background.

@@ -136,7 +136,8 @@ the container again with the same command. Your data stays in the
   uses it to show the home's score on its start page. The same key also
   reads `GET /api/v1/share/machines`: each machine's name, type, memory and
   disk (total and free), whether it answers and how many checks are up or
-  down – never addresses or secrets. WizzOS draws its home map from it.
+  down, and on Proxmox hosts the local room for guest disks (e.g. local-lvm) –
+  never addresses or secrets. WizzOS draws its home map from it.
 - Health score: one number from 0 to 100 for the home, with a plain list of
   what to do. Nestward only deducts for what it can see (alerts, outside
   watch, silent machines, services not working, full disks, low memory,

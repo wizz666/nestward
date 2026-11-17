@@ -152,6 +152,9 @@ func discoverer() (func(context.Context) discovery.Result, error) {
 		if pve != nil {
 			gs, err := pve.Guests(ctx)
 			discovery.AddGuests(&r, gs, cat, err)
+			if st, err := pve.Storage(ctx); err == nil {
+				r.Storage = st
+			}
 		}
 		discovery.ReadBoot(os.Getenv("NESTWARD_HOST_ROOT"), &r)
 		discovery.ReadBackups(os.Getenv("NESTWARD_HOST_ROOT"), backupPaths(), &r)

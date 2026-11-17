@@ -49,6 +49,9 @@ func TestShareMachines(t *testing.T) {
 		out.Machines[0].MemTotal != 32<<30 || out.Machines[0].DiskFree != 300<<30 || !out.Machines[0].Online {
 		t.Fatalf("unexpected: %+v", out.Machines)
 	}
+	if out.Machines[0].Storage == nil {
+		t.Fatal("storage must be an empty list, not null")
+	}
 	if strings.Contains(rec.Body.String(), "address") {
 		t.Fatal("must not contain addresses")
 	}

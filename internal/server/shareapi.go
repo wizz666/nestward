@@ -58,24 +58,34 @@ func (s *Server) shareOK(w http.ResponseWriter, r *http.Request) bool {
 // ShareMachine is one machine on the home map: what it is, how full it is
 // and whether it answers. Never addresses, secrets or service details.
 type ShareMachine struct {
-	Name       string    `json:"name"`
-	Kind       string    `json:"kind"`               // unraid, proxmox, linux …
-	OS         string    `json:"os,omitempty"`       // e.g. "Debian 12"
-	Model      string    `json:"model,omitempty"`    // board/product when known
-	VM         bool      `json:"vm"`                 // runs inside a virtual machine
-	Local      bool      `json:"local"`              // the machine Nestward itself runs on
-	Arch       string    `json:"arch"`
-	Cores      int       `json:"cores"`
-	MemTotal   uint64    `json:"mem_total"`
-	MemFree    uint64    `json:"mem_free"`
-	DiskTotal  uint64    `json:"disk_total"` // biggest filesystem
-	DiskFree   uint64    `json:"disk_free"`
-	LastSeen   time.Time `json:"last_seen"`
-	Online     bool      `json:"online"`
-	Services   int       `json:"services"`
-	Up         int       `json:"up"`
-	Down       int       `json:"down"`
-	WizzOS     bool      `json:"wizzos"`
+	Name      string    `json:"name"`
+	Kind      string    `json:"kind"`            // unraid, proxmox, linux …
+	OS        string    `json:"os,omitempty"`    // e.g. "Debian 12"
+	Model     string    `json:"model,omitempty"` // board/product when known
+	VM        bool      `json:"vm"`              // runs inside a virtual machine
+	Local     bool      `json:"local"`           // the machine Nestward itself runs on
+	Arch      string    `json:"arch"`
+	Cores     int       `json:"cores"`
+	MemTotal  uint64    `json:"mem_total"`
+	MemFree   uint64    `json:"mem_free"`
+	DiskTotal uint64    `json:"disk_total"` // biggest filesystem
+	DiskFree  uint64    `json:"disk_free"`
+	LastSeen  time.Time `json:"last_seen"`
+	Online    bool      `json:"online"`
+	Services  int       `json:"services"`
+	Up        int       `json:"up"`
+	Down      int       `json:"down"`
+	WizzOS    bool      `json:"wizzos"`
+	// Storage is a Proxmox host's room for guest disks (e.g. local-lvm).
+	Storage []ShareStorage `json:"storage"`
+}
+
+// ShareStorage is one place for virtual disks, with its free room.
+type ShareStorage struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Total uint64 `json:"total"`
+	Free  uint64 `json:"free"`
 }
 
 // handleShareMachines is the read-only machine list for WizzOS's home map.
@@ -120,9 +130,13 @@ func (s *Server) handleShareMachines(w http.ResponseWriter, r *http.Request) {
 				sm.DiskTotal, sm.DiskFree = f.TotalBytes, f.FreeBytes
 			}
 		}
+		sm.Storage = []ShareStorage{}
 		if m.Discovery != nil {
 			sm.Services = len(m.Discovery.Services)
 			sm.WizzOS = m.Discovery.WizzOS != nil
+			for _, st := range m.Discovery.Storage {
+				sm.Storage = append(sm.Storage, ShareStorage{Name: st.Name, Type: st.Type, Total: st.TotalBytes, Free: st.FreeBytes})
+			}
 		}
 		for _, c := range checks {
 			if c.MachineID != m.ID {

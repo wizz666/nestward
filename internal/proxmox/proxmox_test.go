@@ -178,3 +178,27 @@ func TestMatchNameIsStrict(t *testing.T) {
 		}
 	}
 }
+
+func TestStorage(t *testing.T) {
+	calls := 0
+	r := &Reader{Node: "pve", Run: func(ctx context.Context, args ...string) ([]byte, error) {
+		if len(args) < 2 || args[0] != "get" || args[1] != "/nodes/pve/storage" {
+			t.Fatalf("unexpected command %v", args)
+		}
+		calls++
+		return []byte(`[{"storage":"local","type":"dir","content":"vztmpl,iso,backup","active":1,"shared":0,"total":70000000000,"avail":59000000000},
+			{"storage":"local-lvm","type":"lvmthin","content":"rootdir,images","active":1,"shared":0,"total":349000000000,"avail":260000000000},
+			{"storage":"tower-backup","type":"cifs","content":"backup,images","active":1,"shared":1,"total":2793000000000,"avail":1042000000000},
+			{"storage":"offline","type":"dir","content":"images","active":0,"shared":0,"total":10,"avail":5}]`), nil
+	}}
+	st, err := r.Storage(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(st) != 1 || st[0].Name != "local-lvm" || st[0].FreeBytes != 260000000000 || st[0].Type != "lvmthin" {
+		t.Fatalf("want only local-lvm, got %+v", st)
+	}
+	if _, err := r.Storage(context.Background()); err != nil || calls != 1 {
+		t.Fatalf("second call should be cached (calls %d, err %v)", calls, err)
+	}
+}
